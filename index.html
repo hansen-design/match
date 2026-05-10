@@ -2908,52 +2908,79 @@ body.dev-mode-on .menu-toggle { top: 50px; }
 
 <div class="toast" id="toast"><div class="toast-icon">✓</div><span id="toastMsg">完成</span></div>
 
-<!-- ① Supabase UMD bundle — 必须用普通 script，不用 type="module"
-     这样 window.supabase 在同页面所有脚本中都可访问
-     必须通过 http:// 或 https:// 访问，不能 file:// 双击打开 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ✦ NEXUS AUTH — 纯本地 localStorage 模式
+     无网络依赖 · 离线可用 · 比赛演示专用 -->
 <script>
 /* ============================================================
-   NEXUS AUTH — 含开发调试模式开关 (DEV_MODE)
-
-   ┌─────────────────────────────────────────────┐
-   │  var DEV_MODE = true  → 自动登录测试用户    │
-   │                         完全跳过 Supabase   │
-   │  var DEV_MODE = false → 真实 Supabase 登录  │
-   └─────────────────────────────────────────────┘
+   NEXUS AUTH · 本地账号系统
+   ============================================================
+   完全基于 localStorage，无任何外部依赖。
+   支持：注册 / 登录 / 自动登录 / 退出 / 演示账号
    ============================================================ */
 
-/* ══════════════════════════════════════════
-   🔧 开发模式开关 — 改这一行即可切换
-   ══════════════════════════════════════════ */
-var DEV_MODE = false;  // true = 开发调试模式 | false = 真实 Supabase 登录
-
-/* 开发模式下自动登录的测试用户 */
-var DEV_USER = {
-  id:       'dev_test_001',
-  username: '测试用户',
-  gender:   'male',
-  email:    'test@example.com'
-};
-
 /* ── 全局变量（var 保证跨 script 块可见）── */
-var currentUser = null;   // { username, gender }  ← 主脚本 init() 直接读取
-var _sbClient   = null;   // Supabase client 实例
-var _sbOnline   = false;  // Supabase 是否连通
+var currentUser = null;   // { username, gender } ← 主脚本 init() 读取
 
-/* ── 配置（DEV_MODE=false 时生效）── */
-var SUPABASE_URL      = 'https://yhhtuzovgcidjcjixfpw.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_ko8ajci3F61KrIp-xKmnFQ_J5NfR_hH';
-/*
-  ⚠️ 若 Supabase 报 401，换成 anon public key（eyJ 开头）：
-  Dashboard → Settings → API → "anon public" → Copy
-*/
+/* ── 存储 key ── */
+var AUTH_SESSION_KEY = 'nexus_auth_session';  // 当前登录 session
+var LOCAL_USERS_KEY  = 'nexus_local_users';   // 注册用户库
 
-var AUTH_SESSION_KEY = 'nexus_auth_session';
-var LOCAL_USERS_KEY  = 'nexus_local_users';
+/* ── 演示账号（首次运行自动创建）── */
+var DEMO_EMAIL    = 'demo@nexus.ai';
+var DEMO_PASSWORD = '123456';
+var DEMO_USERNAME = 'Nexus 演示';
+var DEMO_GENDER   = 'male';
 
 /* ════════════════════════════════════
-   工具：DOM 操作
+   本地账号库操作
+   ════════════════════════════════════ */
+function localGetUsers() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function localSaveUsers(u) {
+  localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(u));
+}
+
+/* 注册：key = 邮箱小写 */
+function localRegister(email, password, username, gender) {
+  var users = localGetUsers();
+  var key   = email.trim().toLowerCase();
+  if (users[key]) return { error: '该邮箱已被注册，请直接登录' };
+  users[key] = {
+    email:     key,
+    username:  username || key.split('@')[0],
+    gender:    gender || 'male',
+    hash:      btoa(unescape(encodeURIComponent(password + '::nx_' + key))),
+    createdAt: Date.now()
+  };
+  localSaveUsers(users);
+  return { error: null, user: users[key] };
+}
+
+/* 登录：校验 email + password */
+function localLogin(email, password) {
+  var users = localGetUsers();
+  var key   = email.trim().toLowerCase();
+  var u     = users[key];
+  if (!u) return { error: '账号不存在，请先注册' };
+  var expected = btoa(unescape(encodeURIComponent(password + '::nx_' + key)));
+  if (u.hash !== expected) return { error: '密码错误，请重试' };
+  return { error: null, user: u };
+}
+
+/* 初始化演示账号（首次进入时） */
+function ensureDemoAccount() {
+  var users = localGetUsers();
+  var key   = DEMO_EMAIL.toLowerCase();
+  if (!users[key]) {
+    localRegister(DEMO_EMAIL, DEMO_PASSWORD, DEMO_USERNAME, DEMO_GENDER);
+    console.info('[Nexus] 演示账号已创建:', DEMO_EMAIL);
+  }
+}
+
+/* ════════════════════════════════════
+   DOM 工具
    ════════════════════════════════════ */
 function authErrShow(id, msg) {
   var el = document.getElementById(id);
@@ -2970,79 +2997,20 @@ function authErrHide(id) {
 function authBtnLoading(id, isLoading, label) {
   var b = document.getElementById(id);
   if (!b) return;
-  b.disabled = isLoading;
+  b.disabled    = isLoading;
   b.textContent = isLoading ? '请稍候…' : label;
 }
-function toEmail(username) {
-  return username.trim().toLowerCase() + '@nexus.app';
-}
-
-/* ── 错误翻译 ── */
-function translateAuthError(msg) {
-  msg = msg || '';
-  if (!msg) return '未知错误，请稍后重试';
-  if (msg.match(/Failed to fetch|NetworkError|fetch/i))
-    return '⚠️ 网络连接失败。请用 Live Server 打开（不能双击 file://）';
-  if (msg.match(/timeout|aborted/i))    return '请求超时，请检查网络后重试';
-  if (msg.match(/Invalid login|invalid_credentials|Email not confirmed/i)) return '用户名或密码错误，请重试';
-  if (msg.match(/already registered|User already registered/i)) return '该用户名已被注册，请换一个';
-  if (msg.match(/Password should be at least/i)) return '密码至少需要 6 位字符';
-  if (msg.match(/signup_disabled|Signups not allowed/i)) return '当前注册已关闭，请联系管理员';
-  if (msg.match(/rate limit|Email rate/i)) return '操作太频繁，请等 60 秒后重试';
-  if (msg.match(/invalid.*key|apikey|401/i)) return 'API Key 无效，请检查 Supabase 配置';
-  return msg;
-}
 
 /* ════════════════════════════════════
-   本地降级账号系统（Supabase 不可用时）
-   ════════════════════════════════════ */
-function localGetUsers() {
-  try { return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '{}'); } catch(e) { return {}; }
-}
-function localSaveUsers(u) { localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(u)); }
-function localRegister(username, password, gender) {
-  var users = localGetUsers(), key = username.toLowerCase();
-  if (users[key]) return { data: null, error: { message: '该用户名已被注册，请换一个' } };
-  users[key] = { username: username, gender: gender, hash: btoa(password + '::nx'), ts: Date.now() };
-  localSaveUsers(users);
-  return { data: { user: { user_metadata: { username: username, gender: gender } } }, error: null };
-}
-function localLogin(username, password) {
-  var users = localGetUsers(), key = username.toLowerCase(), u = users[key];
-  if (!u) return { data: null, error: { message: 'Invalid login credentials' } };
-  if (u.hash !== btoa(password + '::nx')) return { data: null, error: { message: 'Invalid login credentials' } };
-  return { data: { user: { user_metadata: { username: u.username, gender: u.gender } } }, error: null };
-}
-
-/* ════════════════════════════════════
-   Supabase 初始化（DEV_MODE=false 时用）
-   ════════════════════════════════════ */
-function initSupabaseClient() {
-  try {
-    if (!window.supabase) { console.warn('[Nexus] window.supabase 未找到'); return false; }
-    _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, storageKey: 'nexus_sb_session' }
-    });
-    return true;
-  } catch(e) { console.warn('[Nexus] Supabase 初始化异常:', e.message); return false; }
-}
-function checkConnectivity() {
-  if (!_sbClient) return Promise.resolve(false);
-  return Promise.race([
-    _sbClient.auth.getSession().then(function() { return true; }),
-    new Promise(function(resolve) { setTimeout(function() { resolve(false); }, 5000); })
-  ]).catch(function() { return false; });
-}
-
-/* ════════════════════════════════════
-   UI 切换（HTML onclick 直接调用）
+   UI 切换
    ════════════════════════════════════ */
 function switchTab(tab) {
   document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
   document.getElementById('tabReg').classList.toggle('active', tab === 'register');
   document.getElementById('loginForm').style.display    = tab === 'login'    ? 'flex' : 'none';
   document.getElementById('registerForm').style.display = tab === 'register' ? 'flex' : 'none';
-  authErrHide('loginErr'); authErrHide('regErr');
+  authErrHide('loginErr');
+  authErrHide('regErr');
 }
 function selectGender(el) {
   document.querySelectorAll('.auth-gender-opt').forEach(function(o) { o.classList.remove('selected'); });
@@ -3050,22 +3018,22 @@ function selectGender(el) {
 }
 
 /* ════════════════════════════════════
-   进入主界面（DEV 自动登录 / 真实登录 共用）
+   进入主界面
    ════════════════════════════════════ */
 function enterApp(username, gender) {
-  currentUser = { username: username, gender: gender };   // ← 全局赋值，主脚本直接读
+  currentUser = { username: username, gender: gender };
 
   document.getElementById('authOverlay').style.display = 'none';
 
   var emoji      = gender === 'female' ? '👧' : '👦';
   var genderText = gender === 'female' ? '女生' : '男生';
-  var modeText   = DEV_MODE ? '🔧 调试' : (_sbOnline ? '☁️ 云端' : '📱 本地');
 
   document.getElementById('userAvatarSm').textContent  = emoji;
   document.getElementById('userNameSm').textContent    = username;
-  document.getElementById('userGenderSm').textContent  = genderText + ' · ' + modeText;
+  document.getElementById('userGenderSm').textContent  = genderText + ' · 📱 本地';
   document.getElementById('userBadge').style.display   = 'flex';
 
+  /* 更新欢迎语 */
   setTimeout(function() {
     var safeN = typeof escapeHtml === 'function' ? escapeHtml(username) : username;
     var greet = document.querySelector('.companion-greet');
@@ -3079,90 +3047,79 @@ function enterApp(username, gender) {
 /* ════════════════════════════════════
    登录
    ════════════════════════════════════ */
-async function doLogin() {
-  /* DEV_MODE：跳过表单，直接进入 */
-  if (DEV_MODE) { enterApp(DEV_USER.username, DEV_USER.gender); return; }
-
+function doLogin() {
   var email    = (document.getElementById('loginUsername').value || '').trim();
   var password = document.getElementById('loginPassword').value || '';
   authErrHide('loginErr');
+
   if (!email)    { authErrShow('loginErr', '请输入邮箱地址'); return; }
-  if (!password) { authErrShow('loginErr', '请输入密码'); return; }
+  if (!password) { authErrShow('loginErr', '请输入密码');     return; }
+
   authBtnLoading('loginBtn', true, '登录');
-  try {
-    var result = _sbOnline && _sbClient
-      ? await _sbClient.auth.signInWithPassword({ email: email, password: password })
-      : localLogin(email, password);
-    authBtnLoading('loginBtn', false, '登录');
-    if (result.error) { authErrShow('loginErr', translateAuthError(result.error.message)); return; }
-    var meta     = result.data && result.data.user && result.data.user.user_metadata;
-    var gender   = (meta && meta.gender)   || 'male';
-    var dispName = (meta && meta.username) || email.split('@')[0];
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ username: dispName, gender: gender }));
-    enterApp(dispName, gender);
-  } catch(e) {
-    authBtnLoading('loginBtn', false, '登录');
-    authErrShow('loginErr', translateAuthError(e.message || String(e)));
+
+  var result = localLogin(email, password);
+
+  authBtnLoading('loginBtn', false, '登录');
+
+  if (result.error) {
+    authErrShow('loginErr', result.error);
+    return;
   }
+
+  var u = result.user;
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+    email:    u.email,
+    username: u.username,
+    gender:   u.gender
+  }));
+  enterApp(u.username, u.gender);
 }
 
 /* ════════════════════════════════════
    注册
    ════════════════════════════════════ */
-async function doRegister() {
-  /* DEV_MODE：跳过注册，直接进入 */
-  if (DEV_MODE) { enterApp(DEV_USER.username, DEV_USER.gender); return; }
-
+function doRegister() {
   var username = (document.getElementById('regUsername').value || '').trim();
-  var password  = document.getElementById('regPassword').value || '';
-  var genderEl  = document.querySelector('.auth-gender-opt.selected');
-  var gender    = genderEl ? genderEl.dataset.gender : 'male';
+  var password = document.getElementById('regPassword').value || '';
+  var genderEl = document.querySelector('.auth-gender-opt.selected');
+  var gender   = genderEl ? genderEl.dataset.gender : 'male';
   authErrHide('regErr');
-  if (!username || username.length < 3) { authErrShow('regErr', '用户名至少 3 个字符'); return; }
-  if (!/^[a-zA-Z0-9一-龥_-]+$/.test(username)) { authErrShow('regErr', '用户名只能含字母、数字、中文或 _-'); return; }
-  if (!password || password.length < 6) { authErrShow('regErr', '密码至少 6 位'); return; }
-  authBtnLoading('regBtn', true, '创建账号');
-  try {
-    var signUpResult, signInResult;
-    if (_sbOnline && _sbClient) {
-      signUpResult = await _sbClient.auth.signUp({ email: toEmail(username), password: password, options: { data: { username: username, gender: gender } } });
-      if (signUpResult.error) { authBtnLoading('regBtn', false, '创建账号'); authErrShow('regErr', translateAuthError(signUpResult.error.message)); return; }
-      var u = signUpResult.data && signUpResult.data.user;
-      if (u && u.identities && u.identities.length === 0) {
-        authBtnLoading('regBtn', false, '创建账号');
-        authErrShow('regErr', '账号已存在或需邮件确认。请在 Supabase 控制台关闭 "Confirm email"');
-        return;
-      }
-      signInResult = await _sbClient.auth.signInWithPassword({ email: toEmail(username), password: password });
-    } else {
-      signUpResult = localRegister(username, password, gender);
-      if (signUpResult.error) { authBtnLoading('regBtn', false, '创建账号'); authErrShow('regErr', signUpResult.error.message); return; }
-      signInResult = localLogin(username, password);
-    }
-    authBtnLoading('regBtn', false, '创建账号');
-    if (signInResult.error) { switchTab('login'); document.getElementById('loginUsername').value = username; if (typeof toast === 'function') toast('✓ 注册成功，请登录'); return; }
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ username: username, gender: gender }));
-    enterApp(username, gender);
-  } catch(e) {
-    authBtnLoading('regBtn', false, '创建账号');
-    authErrShow('regErr', translateAuthError(e.message || String(e)));
+
+  if (!username || username.length < 2) {
+    authErrShow('regErr', '用户名至少 2 个字符'); return;
   }
+  if (!password || password.length < 6) {
+    authErrShow('regErr', '密码至少 6 位'); return;
+  }
+
+  /* 用用户名生成内部 email key */
+  var internalEmail = username.toLowerCase().replace(/[^a-z0-9一-龥]/g, '_') + '@nexus.local';
+
+  authBtnLoading('regBtn', true, '创建账号');
+
+  var result = localRegister(internalEmail, password, username, gender);
+
+  authBtnLoading('regBtn', false, '创建账号');
+
+  if (result.error) {
+    authErrShow('regErr', result.error); return;
+  }
+
+  /* 注册成功 → 自动登录 */
+  localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+    email:    internalEmail,
+    username: username,
+    gender:   gender
+  }));
+  enterApp(username, gender);
+  if (typeof toast === 'function') toast('✓ 注册成功，欢迎加入 Nexus！');
 }
 
 /* ════════════════════════════════════
    退出登录
    ════════════════════════════════════ */
-async function doLogout() {
-  if (DEV_MODE) {
-    if (!confirm('退出调试用户？将立即重新自动登录')) return;
-    currentUser = null;
-    document.getElementById('userBadge').style.display = 'none';
-    document.getElementById('authOverlay').style.display = 'flex';
-    setTimeout(function() { enterApp(DEV_USER.username, DEV_USER.gender); }, 500);
-    return;
-  }
+function doLogout() {
   if (!confirm('确定要退出登录吗？')) return;
-  try { if (_sbOnline && _sbClient) await _sbClient.auth.signOut(); } catch(e) {}
   localStorage.removeItem(AUTH_SESSION_KEY);
   currentUser = null;
   document.getElementById('authOverlay').style.display = 'flex';
@@ -3173,89 +3130,45 @@ async function doLogout() {
 }
 
 /* ════════════════════════════════════
-   启动 / session 恢复
+   启动 / 自动登录恢复
    ════════════════════════════════════ */
-async function bootAuth() {
-  var overlay   = document.getElementById('authOverlay');
-  var modeHint  = document.getElementById('authModeHint');
+function bootAuth() {
+  var overlay  = document.getElementById('authOverlay');
+  var modeHint = document.getElementById('authModeHint');
   var devBanner = document.getElementById('devBanner');
 
-  /* ══ DEV_MODE 分支：完全跳过 Supabase，零网络请求 ══ */
-  if (DEV_MODE) {
-    overlay.style.display = 'none';
-    if (devBanner) devBanner.style.display = 'flex';
-    document.body.classList.add('dev-mode-on');
-    if (modeHint) {
-      modeHint.textContent = '🔧 开发调试模式 · Supabase 已禁用';
-      modeHint.style.color = 'var(--warn)';
-    }
-    console.info('[Nexus DEV] DEV_MODE=true，自动登录:', DEV_USER.username);
-    enterApp(DEV_USER.username, DEV_USER.gender);
-    return;   // ← 结束，完全不执行 Supabase 任何代码
-  }
+  /* 隐藏开发调试 banner（本地模式不需要） */
+  if (devBanner) devBanner.style.display = 'none';
 
-  /* ══ 正式模式（DEV_MODE=false）══ */
-  overlay.style.display = 'none';
-  var sdkReady = initSupabaseClient();
-  if (sdkReady) {
-    if (modeHint) modeHint.textContent = '正在连接云端…';
-    _sbOnline = await checkConnectivity();
-  }
+  /* 显示模式说明 */
   if (modeHint) {
-    modeHint.textContent = _sbOnline ? '☁️ 云端模式 · 数据安全同步' : '📱 本地模式 · 数据保存在设备';
-    modeHint.style.color = _sbOnline ? 'var(--good)' : 'var(--warn)';
+    modeHint.textContent = '📱 本地模式 · 数据安全存储在设备';
+    modeHint.style.color = 'var(--good)';
   }
 
-  var restored = false;
+  /* 创建演示账号 */
+  ensureDemoAccount();
 
-  /* 恢复 Supabase session */
-  if (_sbOnline && _sbClient) {
-    try {
-      var sessionRes = await _sbClient.auth.getSession();
-      var session    = sessionRes.data && sessionRes.data.session;
-      if (session && session.user) {
-        var cached   = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
-        var meta2    = session.user.user_metadata || {};
-        var uname    = cached.username || meta2.username || session.user.email.split('@')[0];
-        var gdr      = cached.gender   || (session.user.user_metadata && session.user.user_metadata.gender) || 'male';
-        enterApp(uname, gdr);
+  /* 尝试恢复 session */
+  var restored = false;
+  try {
+    var cached = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
+    if (cached.email && cached.username) {
+      /* 验证账号仍然存在 */
+      var users = localGetUsers();
+      if (users[cached.email]) {
+        enterApp(cached.username, cached.gender || 'male');
         restored = true;
       }
-    } catch(e) { console.warn('[Nexus] session 恢复失败:', e.message); }
-  }
+    }
+  } catch(e) { /* 忽略 */ }
 
-  /* 恢复本地 session */
   if (!restored) {
-    try {
-      var cached2 = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
-      if (cached2.username && !_sbOnline) {
-        var users2 = localGetUsers();
-        if (users2[cached2.username.toLowerCase()]) { enterApp(cached2.username, cached2.gender || 'male'); restored = true; }
-      }
-    } catch(e) {}
-  }
-
-  if (!restored) overlay.style.display = 'flex';
-
-  /* onAuthStateChange */
-  if (_sbOnline && _sbClient) {
-    _sbClient.auth.onAuthStateChange(function(event, session) {
-      if (event === 'TOKEN_REFRESHED' && session) {
-        var c = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
-        if (c.username) { c.refreshed = Date.now(); localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(c)); }
-      }
-      if (event === 'SIGNED_OUT' && currentUser) {
-        currentUser = null;
-        localStorage.removeItem(AUTH_SESSION_KEY);
-        document.getElementById('authOverlay').style.display = 'flex';
-        document.getElementById('userBadge').style.display   = 'none';
-        switchTab('login');
-      }
-    });
+    overlay.style.display = 'flex';
   }
 }
 
-/* ── Enter 键绑定 + 启动 ── */
+/* ── Enter 键提交 ── */
 document.addEventListener('DOMContentLoaded', function() {
   ['loginUsername', 'loginPassword'].forEach(function(id) {
     var el = document.getElementById(id);
