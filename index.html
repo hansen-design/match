@@ -1,0 +1,4658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEXUS · 我的学习伙伴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── Warm dark palette ── */
+  --bg-0: #0f0e0c;
+  --bg-1: #16140f;
+  --bg-2: #1e1b14;
+  --surface: rgba(32, 28, 20, 0.60);
+  --surface-2: rgba(40, 36, 26, 0.70);
+  --border: rgba(255, 240, 210, 0.09);
+  --border-strong: rgba(255, 240, 210, 0.16);
+  --text-1: #f5f0e8;
+  --text-2: #b8ae9c;
+  --text-3: #6b6252;
+  /* Warm accent palette — soft blue, peach, sage */
+  --accent: #8bbfd4;
+  --accent-2: #d4a5a5;
+  --accent-3: #c8b87a;
+  --good: #7abf96;
+  --warn: #c8b87a;
+  --bad: #c47a7a;
+  /* Gradients — low-saturation, warm */
+  --grad-1: linear-gradient(135deg, #a8cfe0 0%, #c9a8b8 50%, #e0c9a8 100%);
+  --grad-2: linear-gradient(135deg, #7abf96 0%, #8bbfd4 100%);
+  --grad-3: linear-gradient(135deg, #c8b87a 0%, #c47a7a 100%);
+  --grad-aurora: linear-gradient(135deg, rgba(168,207,224,0.12) 0%, rgba(201,168,184,0.10) 50%, rgba(224,201,168,0.08) 100%);
+  /* PingFang / system CJK sans stack */
+  --font-display: 'PingFang SC', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}
+
+/* ====================================================
+   AUTH OVERLAY — Login / Register
+   ==================================================== */
+#authOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-0);
+  animation: fadeIn 0.5s ease;
+}
+
+#authOverlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 25% 10%, rgba(168,207,224,0.10), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 78% 90%, rgba(201,168,184,0.09), transparent 55%),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(224,201,168,0.05), transparent 65%);
+  pointer-events: none;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  background: rgba(28, 24, 18, 0.72);
+  backdrop-filter: blur(32px) saturate(130%);
+  -webkit-backdrop-filter: blur(32px) saturate(130%);
+  border: 1px solid var(--border-strong);
+  border-radius: 28px;
+  padding: 44px 40px 40px;
+  box-shadow:
+    0 2px 1px rgba(255,240,210,0.06) inset,
+    0 32px 80px rgba(0,0,0,0.55),
+    0 8px 32px rgba(0,0,0,0.30);
+}
+
+@media (max-width: 480px) {
+  .auth-card { padding: 36px 24px 32px; border-radius: 22px; }
+}
+
+.auth-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.auth-logo-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(168,207,224,0.25), rgba(201,168,184,0.15));
+  border: 1px solid rgba(255,240,210,0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-1);
+  text-align: center;
+}
+
+.auth-subtitle {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+.auth-tabs {
+  display: flex;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 24px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 9px;
+  border-radius: 9px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-display);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.auth-tab.active {
+  background: rgba(168,207,224,0.15);
+  color: var(--text-1);
+  border: 1px solid rgba(168,207,224,0.2);
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+.auth-field { display: flex; flex-direction: column; gap: 7px; }
+
+.auth-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(0,0,0,0.30);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-1);
+  font-family: var(--font-display);
+  font-size: 14px;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(139,191,212,0.05);
+  box-shadow: 0 0 0 3px rgba(139,191,212,0.12);
+}
+
+.auth-input::placeholder { color: var(--text-3); }
+
+.auth-gender-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.auth-gender-opt {
+  padding: 12px;
+  background: rgba(0,0,0,0.20);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-gender-opt.selected {
+  background: rgba(139,191,212,0.12);
+  border-color: rgba(139,191,212,0.35);
+  color: var(--text-1);
+}
+
+.auth-gender-opt span { font-size: 18px; }
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #8bbfd4 0%, #a8c9b8 100%);
+  color: #0f0e0c;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 20px rgba(139,191,212,0.25);
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+}
+
+.auth-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(139,191,212,0.35);
+}
+
+.auth-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-err {
+  font-size: 13px;
+  color: var(--bad);
+  text-align: center;
+  padding: 10px 14px;
+  background: rgba(196,122,122,0.08);
+  border: 1px solid rgba(196,122,122,0.18);
+  border-radius: 10px;
+  display: none;
+  font-family: var(--font-display);
+}
+
+.auth-err.show { display: block; }
+
+.auth-divider {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-display);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* user badge in sidebar */
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  margin-bottom: 8px;
+}
+
+.user-avatar-sm {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(168,207,224,0.3), rgba(201,168,184,0.2));
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.user-info { flex: 1; min-width: 0; }
+.user-name-sm {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-gender-sm {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-display);
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-family: var(--font-display);
+}
+.logout-btn:hover { color: var(--bad); background: rgba(196,122,122,0.08); }
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(168,207,224,0.09), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(201,168,184,0.08), transparent 50%),
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(224,201,168,0.05), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  animation: aurora 20s ease-in-out infinite;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+
+@keyframes aurora {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(2%, -1%) scale(1.05); }
+  66% { transform: translate(-1%, 2%) scale(0.98); }
+}
+
+.noise {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* === LAYOUT === */
+.app {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 28px 20px;
+  border-right: 1px solid var(--border);
+  background: rgba(14, 12, 9, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.brand-logo {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--grad-1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(139,191,212,0.22);
+}
+
+.brand-logo::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  background: var(--bg-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-logo::after {
+  content: '✦';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: var(--grad-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  z-index: 1;
+}
+
+.brand-text { display: flex; flex-direction: column; }
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.nav-item:hover { color: var(--text-1); background: rgba(255,255,255,0.03); }
+
+.nav-item.active {
+  color: var(--text-1);
+  background: linear-gradient(90deg, rgba(139,191,212,0.14), rgba(201,168,184,0.07));
+  border: 1px solid rgba(139,191,212,0.20);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -20px; top: 50%;
+  width: 3px; height: 20px;
+  transform: translateY(-50%);
+  background: var(--grad-1);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 10px rgba(139,191,212,0.5);
+}
+
+.nav-icon { width: 18px; height: 18px; opacity: 0.85; }
+
+.sidebar-footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.1em;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--good);
+  margin-right: 8px;
+  box-shadow: 0 0 8px var(--good);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* === MAIN === */
+.main {
+  padding: 28px 36px 60px;
+  position: relative;
+  min-width: 0;
+}
+
+.page { display: none; animation: fadeIn 0.5s cubic-bezier(0.4,0,0.2,1); }
+.page.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-title-block { display: flex; flex-direction: column; gap: 6px; }
+
+.page-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.page-title em {
+  font-style: italic;
+  background: var(--grad-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.page-sub {
+  color: var(--text-2);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.date-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 8px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 100px;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  color: var(--text-2);
+}
+
+/* === CARDS === */
+.card {
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 40%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 12px;
+}
+
+.card-title h3 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(139,191,212,0.10);
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+/* === DASHBOARD === */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.companion-card {
+  padding: 0;
+  background: linear-gradient(135deg, rgba(168,207,224,0.07), rgba(201,168,184,0.05), rgba(32,28,20,0.5));
+  min-height: 320px;
+  display: flex;
+  position: relative;
+}
+
+.companion-stage {
+  flex: 0 0 280px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 60%, rgba(168,207,224,0.12), transparent 70%);
+}
+
+.companion-stage::before {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,184,0.07), transparent 60%);
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+#companionAvatar {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 8px 30px rgba(168,207,224,0.30));
+}
+
+.companion-content {
+  flex: 1;
+  padding: 28px 28px 28px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.companion-greet {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.companion-greet em {
+  font-style: italic;
+  background: var(--grad-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.companion-msg {
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  position: relative;
+}
+
+.companion-msg::before {
+  content: '';
+  position: absolute;
+  left: -7px; top: 20px;
+  width: 12px; height: 12px;
+  background: rgba(255,255,255,0.025);
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+.companion-mood-bar {
+  display: flex;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-3);
+}
+
+.mood-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+}
+
+.mood-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 6px currentColor;
+}
+
+.kpi-stack {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+}
+
+.kpi-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card .kpi-bg-num {
+  position: absolute;
+  right: -10px;
+  bottom: -30px;
+  font-family: var(--font-display);
+  font-size: 140px;
+  line-height: 1;
+  color: rgba(255,240,210,0.025);
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.kpi-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 44px;
+  line-height: 1;
+  margin-top: 8px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.kpi-value .unit { font-size: 16px; color: var(--text-2); margin-left: 4px; font-family: 'Noto Sans SC', sans-serif; }
+
+.kpi-trend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 8px;
+}
+
+.kpi-trend.up { color: var(--good); }
+.kpi-trend.down { color: var(--bad); }
+
+/* === GRID 3 === */
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* === SUBJECT BARS === */
+.subject-list { display: flex; flex-direction: column; gap: 14px; }
+
+.subject-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 50px;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+}
+
+.subject-name { color: var(--text-2); font-weight: 500; }
+
+.subject-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+}
+
+.subject-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--grad-1);
+  position: relative;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 8px rgba(139,191,212,0.35);
+}
+
+.subject-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2.5s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.subject-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-2);
+  text-align: right;
+}
+
+/* === DONUT CHART === */
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.donut-container {
+  position: relative;
+  width: 160px; height: 160px;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.donut-num {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.donut-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* === LINE CHART === */
+.line-chart {
+  width: 100%;
+  height: 160px;
+}
+
+/* === HEATMAP === */
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.heat-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.heat-cell:hover { transform: scale(1.15); z-index: 2; }
+
+/* === BUTTONS === */
+.btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  background: rgba(139,191,212,0.09);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--grad-1);
+  color: #0f0e0c;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(139,191,212,0.22);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(139,191,212,0.35);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+}
+
+.btn-icon {
+  width: 36px; height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+/* === FORMS === */
+.form-grid { display: grid; gap: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+
+.field-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-1);
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(139,191,212,0.05);
+  box-shadow: 0 0 0 3px rgba(139,191,212,0.12);
+}
+
+.textarea { resize: vertical; min-height: 80px; }
+
+.range-wrap { display: flex; flex-direction: column; gap: 8px; }
+.range-head { display: flex; justify-content: space-between; align-items: baseline; }
+.range-val {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  background: var(--grad-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255,240,210,0.08);
+  border-radius: 100px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--grad-1);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(139,191,212,0.4);
+  border: 2px solid var(--bg-1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a8cfe0, #c9a8b8);
+  cursor: pointer;
+  border: 2px solid var(--bg-1);
+}
+
+.mood-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+
+.mood-opt {
+  padding: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 24px;
+}
+
+.mood-opt:hover { border-color: var(--accent); }
+.mood-opt.selected {
+  background: linear-gradient(135deg, rgba(139,191,212,0.14), rgba(201,168,184,0.10));
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.mood-opt-label {
+  display: block;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-3);
+  margin-top: 4px;
+  letter-spacing: 0.1em;
+}
+
+/* === PLAN LIST === */
+.plan-list { display: flex; flex-direction: column; gap: 10px; }
+
+.plan-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.25s;
+}
+
+.plan-item:hover { border-color: var(--border-strong); transform: translateX(2px); }
+
+.plan-item.done {
+  background: linear-gradient(90deg, rgba(74,222,128,0.06), transparent);
+  border-color: rgba(74,222,128,0.2);
+}
+
+.plan-item.done .plan-text { text-decoration: line-through; color: var(--text-3); }
+
+.plan-check {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.plan-item.done .plan-check {
+  background: var(--grad-2);
+  border-color: transparent;
+}
+
+.plan-check svg { opacity: 0; transition: opacity 0.2s; }
+.plan-item.done .plan-check svg { opacity: 1; }
+
+.plan-text { flex: 1; font-size: 14px; }
+
+.plan-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.1em;
+  display: flex;
+  gap: 8px;
+}
+
+.plan-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(139,191,212,0.10);
+  color: var(--accent);
+  border: 1px solid rgba(139,191,212,0.20);
+}
+
+.plan-tag.exam { background: rgba(196,122,122,0.10); color: var(--bad); border-color: rgba(196,122,122,0.22); }
+.plan-tag.hw { background: rgba(212,165,165,0.10); color: var(--accent-2); border-color: rgba(212,165,165,0.22); }
+.plan-tag.routine { background: rgba(122,191,150,0.10); color: var(--good); border-color: rgba(122,191,150,0.22); }
+
+.plan-del {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.plan-item:hover .plan-del { opacity: 1; }
+.plan-del:hover { color: var(--bad); }
+
+/* === POMODORO === */
+.pomodoro-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 30px 0;
+}
+
+.pomo-timer-ring {
+  position: relative;
+  width: 240px; height: 240px;
+}
+
+.pomo-time {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.pomo-time .time-num {
+  font-family: var(--font-display);
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-feature-settings: 'tnum';
+}
+
+.pomo-time .time-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.pomo-controls { display: flex; gap: 12px; }
+
+/* === AI ANALYSIS === */
+.ai-report-card {
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(168,207,224,0.05), rgba(201,168,184,0.03)),
+    var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-report-card::after {
+  content: '';
+  position: absolute;
+  top: -50%; right: -20%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(168,207,224,0.10), transparent 70%);
+  pointer-events: none;
+}
+
+.ai-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(139,191,212,0.10);
+  border: 1px solid rgba(139,191,212,0.22);
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.ai-stamp::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 5px var(--accent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.ai-headline {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-bottom: 16px;
+}
+
+.ai-headline em {
+  font-style: italic;
+  background: var(--grad-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ai-body { color: var(--text-2); font-size: 14px; line-height: 1.8; }
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.metric-cell {
+  padding: 14px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.metric-cell .m-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.metric-cell .m-val {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 6px 0;
+  letter-spacing: -0.01em;
+}
+
+.metric-cell .m-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.metric-cell .m-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--grad-1);
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+
+.suggestion-list { display: flex; flex-direction: column; gap: 12px; }
+
+.suggestion {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.suggestion:hover { border-color: rgba(139,191,212,0.30); transform: translateX(4px); }
+
+.suggestion-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--grad-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  color: #0a0c12;
+}
+
+.suggestion-icon.warn { background: var(--grad-3); }
+.suggestion-icon.good { background: var(--grad-2); }
+
+.suggestion-body { flex: 1; }
+.suggestion-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.suggestion-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+/* === DNA RADAR === */
+.dna-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+}
+
+.dna-radar { width: 100%; height: 320px; }
+
+.dna-stats { display: flex; flex-direction: column; gap: 12px; }
+
+.dna-bar-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 40px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.dna-bar-label { color: var(--text-2); font-size: 12px; }
+
+.dna-bar {
+  height: 22px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dna-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--grad-3);
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.1);
+}
+
+.dna-bar-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-align: right;
+}
+
+/* === PREDICTION === */
+.prediction-stage {
+  padding: 32px;
+  background: linear-gradient(135deg, rgba(168,207,224,0.06), rgba(201,168,184,0.04));
+}
+
+.prediction-chart { width: 100%; height: 280px; margin-top: 20px; }
+
+.pred-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.pred-cell {
+  padding: 18px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pred-cell .p-subject {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.pred-cell .p-numbers {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.pred-cell .p-current {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--text-3);
+  text-decoration: line-through;
+}
+
+.pred-cell .p-future {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  background: var(--grad-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pred-cell .p-delta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.pred-cell .p-delta.up { color: var(--good); }
+.pred-cell .p-delta.down { color: var(--bad); }
+
+/* === DATA LOG TABLE === */
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.log-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.log-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-2);
+}
+
+.log-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.score-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: rgba(139,191,212,0.10);
+  color: var(--accent);
+  border: 1px solid rgba(139,191,212,0.20);
+}
+
+.score-badge.high { background: rgba(122,191,150,0.10); color: var(--good); border-color: rgba(122,191,150,0.22); }
+.score-badge.low { background: rgba(196,122,122,0.10); color: var(--bad); border-color: rgba(196,122,122,0.22); }
+
+/* === EMPTY === */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+/* === MOBILE NAV === */
+.mobile-nav { display: none; }
+.menu-toggle { display: none; }
+
+/* === RESPONSIVE === */
+@media (max-width: 1100px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .dna-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0;
+    width: 260px;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .menu-toggle {
+    display: flex;
+    position: fixed;
+    top: 16px; right: 16px;
+    z-index: 101;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    backdrop-filter: blur(20px);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-1);
+  }
+
+  .main { padding: 70px 16px 80px; }
+  .page-title { font-size: 30px; }
+  .page-head { margin-bottom: 20px; }
+
+  .companion-card { flex-direction: column; min-height: auto; }
+  .companion-stage { flex: 0 0 200px; height: 200px; }
+  .companion-content { padding: 0 20px 24px; }
+  .companion-greet { font-size: 22px; }
+
+  .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+
+  .pomo-timer-ring { width: 200px; height: 200px; }
+  .pomo-time .time-num { font-size: 52px; }
+
+  .ai-headline { font-size: 22px; }
+  .ai-report-card { padding: 22px; }
+
+  .mobile-nav {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 50;
+    background: rgba(14,12,9,0.88);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 10px 4px;
+  }
+
+  .mnav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 2px;
+    color: var(--text-3);
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 9px;
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+  }
+  .mnav-item.active { color: var(--accent); }
+  .mnav-item svg { width: 18px; height: 18px; }
+
+  .kpi-stack { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+  .kpi-value { font-size: 32px; }
+
+  .pred-cell .p-future { font-size: 24px; }
+
+  .log-table { font-size: 12px; }
+  .log-table th:nth-child(n+4), .log-table td:nth-child(n+4) { display: none; }
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* === TOAST === */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  z-index: 200;
+  padding: 14px 20px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-strong);
+  border-radius: 100px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+.toast-icon {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--grad-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #0f0e0c;
+}
+
+@media (max-width: 760px) {
+  .toast { bottom: 80px; }
+}
+
+/* Stagger animation */
+.stagger > * { opacity: 0; animation: rise 0.6s cubic-bezier(0.4,0,0.2,1) forwards; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger > *:nth-child(3) { animation-delay: 0.19s; }
+.stagger > *:nth-child(4) { animation-delay: 0.26s; }
+.stagger > *:nth-child(5) { animation-delay: 0.33s; }
+.stagger > *:nth-child(6) { animation-delay: 0.4s; }
+
+@keyframes rise {
+  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px); }
+}
+/* === AI 今日日报卡片 === */
+.ai-daily-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 26px 28px 24px;
+  background: linear-gradient(135deg,
+    rgba(168,207,224,0.10) 0%,
+    rgba(201,168,184,0.08) 50%,
+    rgba(224,201,168,0.06) 100%);
+  border: 1px solid rgba(255,240,210,0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 40px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.ai-daily-card::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168,207,224,0.18), transparent 65%);
+  pointer-events: none;
+}
+.ai-daily-card::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,184,0.12), transparent 65%);
+  pointer-events: none;
+}
+.ai-daily-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ai-daily-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  background: rgba(139,191,212,0.12);
+  border: 1px solid rgba(139,191,212,0.24);
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+.ai-daily-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.ai-daily-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+}
+.ai-daily-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.ai-daily-title em {
+  font-style: normal;
+  background: var(--grad-1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ai-daily-body {
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.8;
+  min-height: 44px;
+  margin-bottom: 18px;
+}
+/* 打字机光标 */
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px; height: 14px;
+  background: var(--accent);
+  border-radius: 1px;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+.ai-daily-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.ai-daily-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 12px;
+  color: var(--text-2);
+  font-family: var(--font-display);
+}
+.ai-daily-pill .pill-val {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-1);
+}
+.ai-daily-encourage {
+  padding: 14px 16px;
+  background: rgba(139,191,212,0.07);
+  border: 1px solid rgba(139,191,212,0.15);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 12px 12px 0;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.7;
+  font-style: italic;
+  position: relative;
+  z-index: 1;
+}
+
+/* === 学习人格卡片 === */
+.personality-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg,
+    rgba(201,168,184,0.10) 0%,
+    rgba(168,207,224,0.08) 100%);
+  border: 1px solid rgba(255,240,210,0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+.personality-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 90% 10%, rgba(168,207,224,0.12), transparent 60%);
+  pointer-events: none;
+}
+.personality-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+.personality-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.personality-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.personality-info { flex: 1; min-width: 0; }
+.personality-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.personality-subtitle {
+  font-size: 12px;
+  color: var(--text-3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+.personality-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+.personality-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+  position: relative;
+  z-index: 1;
+}
+.trait-tag {
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-family: var(--font-display);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+/* 粒子动画容器 */
+.personality-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 20px;
+}
+.p-dot {
+  position: absolute;
+  border-radius: 50%;
+  animation: pdrift linear infinite;
+}
+@keyframes pdrift {
+  0%   { transform: translateY(0) scale(1);   opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 0.6; }
+  100% { transform: translateY(-90px) scale(0.5); opacity: 0; }
+}
+
+/* 两列下方网格调整 */
+.dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 1100px) { .dashboard-bottom-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px)  { .dashboard-bottom-grid { grid-template-columns: 1fr; } }
+/* =====================================================
+   ✦ 番茄钟区域氛围增强 — 仅添加，不修改现有样式
+   ===================================================== */
+
+/* 外层呼吸光晕圈（伪元素叠加，不改现有布局） */
+.pomo-timer-ring::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  pointer-events: none;
+  transition: all 0.6s ease;
+}
+.pomo-timer-ring::after {
+  content: '';
+  position: absolute;
+  inset: -26px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: all 0.6s ease;
+}
+
+/* 专注运行：蓝色呼吸光 */
+.pomo-active .pomo-timer-ring::before {
+  border-color: rgba(139,191,212,0.38);
+  box-shadow: 0 0 22px rgba(139,191,212,0.16), inset 0 0 16px rgba(139,191,212,0.05);
+  animation: pomoBreath 4s ease-in-out infinite;
+}
+.pomo-active .pomo-timer-ring::after {
+  border-color: rgba(139,191,212,0.14);
+  animation: pomoBreath 4s ease-in-out infinite 0.9s;
+}
+
+/* 休息运行：粉色呼吸光 */
+.pomo-break .pomo-timer-ring::before {
+  border-color: rgba(201,168,184,0.38);
+  box-shadow: 0 0 22px rgba(201,168,184,0.16), inset 0 0 16px rgba(201,168,184,0.05);
+  animation: pomoBreath 6s ease-in-out infinite;
+}
+.pomo-break .pomo-timer-ring::after {
+  border-color: rgba(201,168,184,0.14);
+  animation: pomoBreath 6s ease-in-out infinite 1.3s;
+}
+
+@keyframes pomoBreath {
+  0%,100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.05); opacity: 1;    }
+}
+
+/* 番茄钟卡片整体发光 */
+.pomo-card-active {
+  box-shadow:
+    0 0 0 1px rgba(139,191,212,0.22),
+    0 6px 36px rgba(139,191,212,0.10),
+    0 2px 8px rgba(0,0,0,0.28) !important;
+}
+.pomo-card-break {
+  box-shadow:
+    0 0 0 1px rgba(201,168,184,0.22),
+    0 6px 36px rgba(201,168,184,0.10),
+    0 2px 8px rgba(0,0,0,0.28) !important;
+}
+
+/* 流光扫描 */
+.pomo-scan {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.pomo-active .pomo-scan,
+.pomo-break  .pomo-scan { opacity: 1; }
+.pomo-scan::before {
+  content: '';
+  position: absolute;
+  top: -100%; left: -30%;
+  width: 45%; height: 300%;
+  background: linear-gradient(
+    105deg, transparent 38%,
+    rgba(255,255,255,0.045) 50%,
+    transparent 62%
+  );
+  animation: pomoScan 3.5s linear infinite;
+}
+@keyframes pomoScan {
+  from { transform: translateX(0); }
+  to   { transform: translateX(560%); }
+}
+
+/* =====================================================
+   ✦ 深夜守护模式
+   ===================================================== */
+
+/* 星空 canvas */
+#nightStars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 2.5s ease;
+}
+body.night-mode #nightStars { opacity: 1; }
+
+/* 深夜整体轻微暖化 */
+body.night-mode {
+  --bg-0: #110f0b;
+  --bg-1: #1a1610;
+}
+body.night-mode::before {
+  background:
+    radial-gradient(ellipse 70% 50% at 25% 5%,  rgba(201,168,184,0.07), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 80% 95%, rgba(224,201,168,0.06), transparent 55%),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(168,207,224,0.04), transparent 65%) !important;
+}
+
+/* 深夜提醒浮动条 */
+#nightBar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 500;
+  padding: 13px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: linear-gradient(90deg,
+    rgba(201,168,184,0.13),
+    rgba(168,207,224,0.08));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(255,240,210,0.10);
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text-2);
+  transform: translateY(100%);
+  transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
+}
+body.night-mode #nightBar { transform: translateY(0); }
+@media (max-width: 760px) {
+  body.night-mode #nightBar { bottom: 60px; }
+}
+
+.night-bar-icon { font-size: 18px; flex-shrink: 0; }
+.night-bar-text { flex: 1; line-height: 1.55; }
+.night-bar-text strong {
+  display: block;
+  font-weight: 600;
+  color: var(--text-1);
+  font-size: 13px;
+  margin-bottom: 1px;
+}
+.night-bar-close {
+  background: none; border: none;
+  color: var(--text-3); cursor: pointer;
+  font-size: 16px; padding: 4px 8px;
+  border-radius: 6px; flex-shrink: 0;
+  transition: color 0.2s;
+}
+.night-bar-close:hover { color: var(--text-1); }
+
+/* 深夜卡片轻微暖色光晕 */
+body.night-mode .card {
+  border-color: rgba(255,235,200,0.07) !important;
+}
+
+/* =====================================================
+   ✦ 卡片轻微 hover 浮动（仅加 transition，不改布局）
+   ===================================================== */
+.card {
+  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1),
+              box-shadow 0.32s cubic-bezier(0.4,0,0.2,1),
+              border-color 0.32s !important;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* AI日报卡片轻柔呼吸 */
+.ai-daily-card {
+  animation: aiCardPulse 7s ease-in-out infinite;
+}
+@keyframes aiCardPulse {
+  0%,100% { box-shadow: 0 2px 40px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.04) inset; }
+  50%      { box-shadow: 0 4px 50px rgba(168,207,224,0.09), 0 1px 0 rgba(255,255,255,0.05) inset; }
+}
+
+/* === END NEW CARD STYLES === */
+#devBanner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 99999;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #1a1200 0px, #1a1200 10px,
+    #241a00 10px, #241a00 20px
+  );
+  border-bottom: 1px solid #c8b87a;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #c8b87a;
+  text-transform: uppercase;
+  user-select: none;
+}
+#devBanner .dev-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #c8b87a;
+  box-shadow: 0 0 8px #c8b87a;
+  animation: pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+#devBanner .dev-close {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #6b6252;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+#devBanner .dev-close:hover { color: #c8b87a; }
+/* push everything down when banner is visible */
+body.dev-mode-on .app     { padding-top: 34px; }
+body.dev-mode-on .sidebar { top: 34px; height: calc(100vh - 34px); }
+body.dev-mode-on .menu-toggle { top: 50px; }
+@media (max-width: 760px) {
+  body.dev-mode-on .main { padding-top: 104px; }
+}
+</style>
+</head>
+<body>
+<!-- DEV MODE BANNER — 仅 DEV_MODE=true 时可见，生产环境不显示 -->
+<div id="devBanner" style="display:none;">
+  <div class="dev-dot"></div>
+  <span>开发调试模式 · Dev Mode · Supabase 已禁用 · 数据存 localStorage</span>
+  <button class="dev-close" onclick="document.getElementById('devBanner').style.display='none'" title="隐藏">✕</button>
+</div>
+<div class="noise"></div>
+
+<!-- ✦ 星空层 — 深夜守护模式时淡入，z-index:0 不遮挡内容 -->
+<canvas id="nightStars"></canvas>
+
+<!-- ✦ 深夜提醒浮动条 -->
+<div id="nightBar">
+  <span class="night-bar-icon">🌙</span>
+  <div class="night-bar-text">
+    <strong id="nightBarTitle">已经很晚了，今天辛苦了</strong>
+    <span id="nightBarSub">记得好好休息，明天继续加油 ✨</span>
+  </div>
+  <button class="night-bar-close" onclick="this.closest('#nightBar').style.display='none'" title="知道了">✕</button>
+</div>
+
+<!-- ===== AUTH OVERLAY ===== -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-logo-wrap">
+      <div class="auth-logo-icon">✦</div>
+      <div>
+        <div class="auth-title">Nexus 学习伙伴</div>
+        <div class="auth-subtitle">你的专属 AI 学习陪伴</div>
+        <div id="authModeHint" style="text-align:center;font-size:11px;color:var(--text-3);margin-top:6px;font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;transition:color 0.3s;">正在检测连接…</div>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">登录</div>
+      <div class="auth-tab" id="tabReg" onclick="switchTab('register')">注册</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm" class="auth-form">
+      <div class="auth-field">
+        <label class="auth-label">用户名</label>
+        <input class="auth-input" id="loginUsername" type="text" placeholder="请输入用户名" autocomplete="username">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">密码</label>
+        <input class="auth-input" id="loginPassword" type="password" placeholder="请输入密码" autocomplete="current-password">
+      </div>
+      <div class="auth-err" id="loginErr"></div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()">登录</button>
+      <div class="auth-divider">还没有账号？点击上方「注册」</div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" class="auth-form" style="display:none;">
+      <div class="auth-field">
+        <label class="auth-label">用户名</label>
+        <input class="auth-input" id="regUsername" type="text" placeholder="3–16 个字符，字母/数字" autocomplete="username">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">密码</label>
+        <input class="auth-input" id="regPassword" type="password" placeholder="至少 6 位" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">性别</label>
+        <div class="auth-gender-row">
+          <div class="auth-gender-opt selected" data-gender="male" onclick="selectGender(this)"><span>👦</span> 男生</div>
+          <div class="auth-gender-opt" data-gender="female" onclick="selectGender(this)"><span>👧</span> 女生</div>
+        </div>
+      </div>
+      <div class="auth-err" id="regErr"></div>
+      <button class="auth-btn" id="regBtn" onclick="doRegister()">创建账号</button>
+      <div class="auth-divider">已有账号？点击上方「登录」</div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo"></div>
+      <div class="brand-text">
+        <span class="brand-name">Nexus</span>
+        <span class="brand-sub">学习伙伴 · v1.0</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <!-- user badge (populated after login) -->
+      <div class="user-badge" id="userBadge" style="display:none;">
+        <div class="user-avatar-sm" id="userAvatarSm">👦</div>
+        <div class="user-info">
+          <div class="user-name-sm" id="userNameSm">同学</div>
+          <div class="user-gender-sm" id="userGenderSm">学习伙伴</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="退出登录">退出</button>
+      </div>
+      <div class="nav-item active" data-page="dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+        概览
+      </div>
+      <div class="nav-item" data-page="plan">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        计划
+      </div>
+      <div class="nav-item" data-page="record">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z"/></svg>
+        记录
+      </div>
+      <div class="nav-item" data-page="analysis">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+        AI 分析
+      </div>
+      <div class="nav-item" data-page="dna">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+        错题 DNA
+      </div>
+      <div class="nav-item" data-page="predict">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        预测
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      <span id="sidebarStatus">SYSTEM READY</span>
+    </div>
+  </aside>
+
+  <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- ====== DASHBOARD ====== -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-head">
+        <div class="page-title-block">
+          <span class="page-eyebrow">// dashboard</span>
+          <h1 class="page-title">你好，<em>同学</em></h1>
+          <p class="page-sub" id="dashSub">让我们看看今天的学习状态</p>
+        </div>
+        <div class="date-chip" id="dateChip">--</div>
+      </div>
+
+      <!-- ✦ AI 今日学习日报 + 学习人格 (新增，不影响现有结构) -->
+      <div class="dashboard-bottom-grid" id="aiDailyRow">
+        <!-- AI 今日日报 -->
+        <div class="ai-daily-card" id="aiDailyCard">
+          <div class="ai-daily-header">
+            <div class="ai-daily-badge">NEXUS · 今日日报</div>
+            <div class="ai-daily-time" id="aiDailyTime">--</div>
+          </div>
+          <div class="ai-daily-title" id="aiDailyTitle">正在分析今天的状态<em>…</em></div>
+          <div class="ai-daily-body" id="aiDailyBody">
+            <span id="aiDailyText"></span><span class="typewriter-cursor" id="aiCursor"></span>
+          </div>
+          <div class="ai-daily-pills" id="aiDailyPills"></div>
+          <div class="ai-daily-encourage" id="aiDailyEncourage"></div>
+        </div>
+
+        <!-- 学习人格分析 -->
+        <div class="card personality-card" id="personalityCard">
+          <div class="personality-particles" id="personalityParticles"></div>
+          <div style="position:relative;z-index:1;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;color:var(--text-3);margin-bottom:14px;text-transform:uppercase;">// 学习人格分析</div>
+            <div class="personality-row">
+              <div class="personality-icon" id="personalityIcon">🌱</div>
+              <div class="personality-info">
+                <div class="personality-name" id="personalityName">分析中…</div>
+                <div class="personality-subtitle" id="personalitySubtitle">LOADING TYPE</div>
+                <div class="personality-desc" id="personalityDesc">正在根据你的学习数据生成专属人格分析。</div>
+              </div>
+            </div>
+            <div class="personality-traits" id="personalityTraits"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-grid stagger">
+        <div class="card companion-card">
+          <div class="companion-stage">
+            <svg id="companionAvatar" width="200" height="200" viewBox="0 0 200 200">
+              <defs>
+                <radialGradient id="bodyGrad" cx="50%" cy="40%">
+                  <stop offset="0%" stop-color="#c9a8b8" stop-opacity="0.95"/>
+                  <stop offset="60%" stop-color="#a8cfe0" stop-opacity="0.85"/>
+                  <stop offset="100%" stop-color="#6b4e6b" stop-opacity="0.4"/>
+                </radialGradient>
+                <radialGradient id="coreGrad" cx="50%" cy="50%">
+                  <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#a8cfe0" stop-opacity="0.4"/>
+                </radialGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <!-- Outer rings -->
+              <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(168,207,224,0.15)" stroke-width="0.5" stroke-dasharray="2 4">
+                <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="40s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(201,168,184,0.18)" stroke-width="0.5" stroke-dasharray="1 3">
+                <animateTransform attributeName="transform" type="rotate" from="360 100 100" to="0 100 100" dur="60s" repeatCount="indefinite"/>
+              </circle>
+              <!-- Body -->
+              <g id="avatarBody" filter="url(#glow)">
+                <ellipse cx="100" cy="105" rx="55" ry="60" fill="url(#bodyGrad)" opacity="0.9">
+                  <animate attributeName="ry" values="60;62;60" dur="3s" repeatCount="indefinite"/>
+                </ellipse>
+                <!-- Inner glow -->
+                <circle cx="100" cy="100" r="35" fill="url(#coreGrad)" opacity="0.4">
+                  <animate attributeName="r" values="35;40;35" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Eyes -->
+                <g id="avatarEyes">
+                  <ellipse class="eye" cx="85" cy="95" rx="3.5" ry="5" fill="#0b0d14"/>
+                  <ellipse class="eye" cx="115" cy="95" rx="3.5" ry="5" fill="#0b0d14"/>
+                  <circle cx="86" cy="93" r="1.2" fill="#fff"/>
+                  <circle cx="116" cy="93" r="1.2" fill="#fff"/>
+                </g>
+                <!-- Mouth -->
+                <path id="avatarMouth" d="M 90 115 Q 100 122 110 115" stroke="#0b0d14" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <!-- Cheek glow -->
+                <circle cx="78" cy="108" r="4" fill="#fb7185" opacity="0.3"/>
+                <circle cx="122" cy="108" r="4" fill="#fb7185" opacity="0.3"/>
+              </g>
+              <!-- Floating sparkles -->
+              <g opacity="0.8">
+                <circle cx="40" cy="50" r="1.5" fill="#fff">
+                  <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="160" cy="60" r="1" fill="#a8cfe0">
+                  <animate attributeName="opacity" values="0;1;0" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="170" cy="140" r="1.5" fill="#c9a8b8">
+                  <animate attributeName="opacity" values="0;1;0" dur="2.5s" begin="1s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="35" cy="130" r="1" fill="#e0c9a8">
+                  <animate attributeName="opacity" values="0;1;0" dur="3.5s" begin="0.3s" repeatCount="indefinite"/>
+                </circle>
+              </g>
+            </svg>
+          </div>
+          <div class="companion-content">
+            <div class="companion-greet">我是 <em>Nexus</em>，你的学习伙伴</div>
+            <div class="companion-msg" id="companionMsg">正在加载今日数据⋯</div>
+            <div class="companion-mood-bar">
+              <div class="mood-pill"><span class="dot"></span><span id="aiMoodText">伙伴状态：愉快</span></div>
+              <div class="mood-pill"><span class="dot" style="background: var(--accent-2); color: var(--accent-2)"></span><span id="aiEnergyText">能量充沛</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-stack">
+          <div class="card kpi-card">
+            <span class="kpi-bg-num">τ</span>
+            <span class="kpi-label">// 本周累计学习</span>
+            <div>
+              <div class="kpi-value"><span id="kpiHours">0</span><span class="unit">小时</span></div>
+              <div class="kpi-trend up" id="kpiHoursTrend">→ 暂无对比数据</div>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <span class="kpi-bg-num">σ</span>
+            <span class="kpi-label">// 平均专注度</span>
+            <div>
+              <div class="kpi-value"><span id="kpiFocus">0</span><span class="unit">/10</span></div>
+              <div class="kpi-trend" id="kpiFocusTrend">→ 等待数据录入</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3 stagger">
+        <div class="card">
+          <div class="card-title">
+            <h3>各科学习时长分布</h3>
+            <span class="card-title-tag">7d</span>
+          </div>
+          <div class="subject-list" id="subjectList">
+            <div class="empty"><div class="empty-icon">○</div>尚无学习记录</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <h3>整体健康度</h3>
+            <span class="card-title-tag">live</span>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut-container">
+              <svg width="160" height="160" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="65" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="14"/>
+                <circle id="donutFill" cx="80" cy="80" r="65" fill="none" stroke="url(#donutGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408" transform="rotate(-90 80 80)" style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1);"/>
+                <defs>
+                  <linearGradient id="donutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#7dd3fc"/>
+                    <stop offset="100%" stop-color="#c4b5fd"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="donut-center">
+                <div class="donut-num" id="donutNum">0</div>
+                <div class="donut-label">总分 / 100</div>
+              </div>
+            </div>
+            <div style="text-align:center;color:var(--text-3);font-size:12px;line-height:1.6;" id="donutHint">综合学习、作息、专注与情绪</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <h3>本周专注力曲线</h3>
+            <span class="card-title-tag">trend</span>
+          </div>
+          <svg class="line-chart" id="focusChart" viewBox="0 0 300 160" preserveAspectRatio="none"></svg>
+          <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.15em;margin-top:8px;">
+            <span>7天前</span><span>今天</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2 stagger">
+        <div class="card">
+          <div class="card-title">
+            <h3>近 4 周学习热力</h3>
+            <span class="card-title-tag">heat</span>
+          </div>
+          <div class="heatmap" id="heatmap"></div>
+          <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.15em;margin-top:14px;align-items:center;">
+            <span>少</span>
+            <div style="display:flex;gap:3px;">
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.04)"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,211,252,0.25)"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,211,252,0.5)"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:rgba(125,211,252,0.75)"></div>
+              <div style="width:10px;height:10px;border-radius:2px;background:#7dd3fc"></div>
+            </div>
+            <span>多</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <h3>今日待办</h3>
+            <button class="btn btn-ghost" data-page-jump="plan" style="padding:6px 12px;font-size:12px;">查看全部 →</button>
+          </div>
+          <div class="plan-list" id="todayPlanList">
+            <div class="empty"><div class="empty-icon">◇</div>今日还没有计划，去添加一个吧</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== PLAN ====== -->
+    <section class="page" id="page-plan">
+      <div class="page-head">
+        <div class="page-title-block">
+          <span class="page-eyebrow">// study plan</span>
+          <h1 class="page-title">学习<em>计划</em></h1>
+          <p class="page-sub">规划每一天，让目标清晰可见</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><h3>新建计划</h3></div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">计划内容</label>
+              <input class="input" id="planText" placeholder="如：完成数学第三章习题">
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label class="field-label">类型</label>
+                <select class="select" id="planType">
+                  <option value="study">日常学习</option>
+                  <option value="hw">作业</option>
+                  <option value="exam">考试</option>
+                  <option value="routine">作息</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">目标日期</label>
+                <input class="input" type="date" id="planDate">
+              </div>
+            </div>
+            <button class="btn btn-primary" id="addPlanBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              添加计划
+            </button>
+          </div>
+        </div>
+
+        <div class="card" id="pomoCard">
+          <div class="card-title">
+            <h3>番茄钟专注</h3>
+            <span class="card-title-tag" id="pomoStatus">待机</span>
+          </div>
+          <div class="pomodoro-wrap">
+            <div class="pomo-timer-ring" id="pomoRingWrap">
+              <svg width="240" height="240" viewBox="0 0 240 240">
+                <circle cx="120" cy="120" r="105" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+                <circle id="pomoRing" cx="120" cy="120" r="105" fill="none" stroke="url(#pomoGrad)" stroke-width="6" stroke-linecap="round" stroke-dasharray="660" stroke-dashoffset="0" transform="rotate(-90 120 120)" style="transition: stroke-dashoffset 1s linear;"/>
+                <defs>
+                  <linearGradient id="pomoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#8bbfd4"/>
+                    <stop offset="100%" stop-color="#d4a5a5"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <!-- ✦ 流光层 — 运行时激活 -->
+              <div class="pomo-scan"></div>
+              <div class="pomo-time">
+                <div class="time-num" id="pomoTime">25:00</div>
+                <div class="time-label" id="pomoMode">FOCUS</div>
+              </div>
+            </div>
+            <div class="pomo-controls">
+              <button class="btn btn-primary" id="pomoStart">▶ 开始</button>
+              <button class="btn" id="pomoReset">↻ 重置</button>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3);letter-spacing:0.15em;">
+              今日已完成 <span id="pomoCount" style="color:var(--accent);">0</span> 个番茄
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">
+          <h3>所有计划</h3>
+          <div style="display:flex;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11px;">
+            <span style="color:var(--text-3);" id="planCounter">- / -</span>
+          </div>
+        </div>
+        <div class="plan-list" id="allPlanList">
+          <div class="empty"><div class="empty-icon">◇</div>还没有计划，先添加一个吧</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== RECORD ====== -->
+    <section class="page" id="page-record">
+      <div class="page-head">
+        <div class="page-title-block">
+          <span class="page-eyebrow">// data input</span>
+          <h1 class="page-title">学习<em>记录</em></h1>
+          <p class="page-sub">数据是 AI 分析的基础，让我了解你的一天</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><h3>今日学习数据</h3></div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">学科</label>
+              <select class="select" id="recSubject">
+                <option>语文</option><option>数学</option><option>英语</option>
+                <option>物理</option><option>化学</option><option>生物</option>
+                <option>历史</option><option>地理</option><option>政治</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label class="field-label">学习时长（分钟）</label>
+                <input class="input" type="number" id="recDuration" placeholder="如 60" min="0">
+              </div>
+              <div class="field">
+                <label class="field-label">本次成绩 (可选)</label>
+                <input class="input" type="number" id="recScore" placeholder="0-100" min="0" max="100">
+              </div>
+            </div>
+
+            <div class="range-wrap">
+              <div class="range-head">
+                <label class="field-label">专注度评分</label>
+                <span class="range-val" id="focusVal">7</span>
+              </div>
+              <input type="range" id="recFocus" min="1" max="10" value="7">
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label class="field-label">睡眠时间（小时）</label>
+                <input class="input" type="number" id="recSleep" placeholder="如 7.5" min="0" max="24" step="0.5">
+              </div>
+              <div class="field">
+                <label class="field-label">日期</label>
+                <input class="input" type="date" id="recDate">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">今日心情</label>
+              <div class="mood-picker" id="moodPicker">
+                <div class="mood-opt" data-mood="1">😔<span class="mood-opt-label">低落</span></div>
+                <div class="mood-opt" data-mood="2">😐<span class="mood-opt-label">一般</span></div>
+                <div class="mood-opt selected" data-mood="3">🙂<span class="mood-opt-label">还行</span></div>
+                <div class="mood-opt" data-mood="4">😊<span class="mood-opt-label">不错</span></div>
+                <div class="mood-opt" data-mood="5">🤩<span class="mood-opt-label">超棒</span></div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">备注 (可选)</label>
+              <textarea class="textarea" id="recNote" placeholder="今天有什么想说的⋯"></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="addRecBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              保存今日记录
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><h3>错题记录（用于 DNA 分析）</h3></div>
+          <div class="form-grid">
+            <div class="form-row">
+              <div class="field">
+                <label class="field-label">学科</label>
+                <select class="select" id="errSubject">
+                  <option>语文</option><option>数学</option><option>英语</option>
+                  <option>物理</option><option>化学</option><option>生物</option>
+                  <option>历史</option><option>地理</option><option>政治</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">知识点</label>
+                <input class="input" id="errTopic" placeholder="如：二次函数">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label class="field-label">错误类型</label>
+                <select class="select" id="errType">
+                  <option value="careless">粗心</option>
+                  <option value="concept">概念不清</option>
+                  <option value="method">方法错误</option>
+                  <option value="time">时间不够</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">时间段</label>
+                <select class="select" id="errPeriod">
+                  <option value="morning">上午</option>
+                  <option value="afternoon">下午</option>
+                  <option value="evening">晚上</option>
+                  <option value="late">深夜</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="addErrBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              添加错题
+            </button>
+          </div>
+
+          <div class="card-title" style="margin-top:24px;"><h3>近期错题</h3></div>
+          <div class="plan-list" id="errList" style="max-height:240px;overflow-y:auto;">
+            <div class="empty" style="padding:20px;"><div class="empty-icon">○</div>暂无错题记录</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">
+          <h3>历史学习记录</h3>
+          <button class="btn btn-ghost" id="clearAllBtn" style="padding:6px 12px;font-size:11px;color:var(--bad);">清除所有数据</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>日期</th><th>学科</th><th>时长</th><th>成绩</th><th>专注度</th><th>睡眠</th><th>心情</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-3);">暂无记录</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== ANALYSIS ====== -->
+    <section class="page" id="page-analysis">
+      <div class="page-head">
+        <div class="page-title-block">
+          <span class="page-eyebrow">// ai analysis</span>
+          <h1 class="page-title"><em>AI</em> 智能分析</h1>
+          <p class="page-sub">基于你的学习数据，由 Nexus 为你生成个性化洞察</p>
+        </div>
+        <button class="btn btn-primary" id="refreshAnalysis">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          重新分析
+        </button>
+      </div>
+
+      <div class="card ai-report-card">
+        <div class="ai-stamp">NEXUS · AI DAILY REPORT</div>
+        <h2 class="ai-headline" id="aiHeadline">让我先看看你的学习<em>数据</em>⋯</h2>
+        <div class="ai-body" id="aiBody">尚未录入足够数据。请先在"记录"页填写至少 1 天的学习信息，AI 会立刻为你生成日报。</div>
+
+        <div class="metric-grid" id="metricGrid"></div>
+      </div>
+
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="card">
+          <div class="card-title"><h3>个性建议</h3><span class="card-title-tag">3 条</span></div>
+          <div class="suggestion-list" id="suggestionList">
+            <div class="empty"><div class="empty-icon">◇</div>等待数据 · AI 思考中</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,113,133,0.04)),var(--surface);">
+          <div>
+            <div class="card-title"><h3>每日鼓励</h3><span class="card-title-tag">✦</span></div>
+            <div style="font-family:var(--font-display);font-size:22px;font-weight:500;line-height:1.6;font-style:italic;letter-spacing:-0.005em;" id="encourageText">
+              "你今天的努力，会成为明天的光。"
+            </div>
+            <div style="color:var(--text-3);font-size:12px;margin-top:12px;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;">— FROM NEXUS</div>
+          </div>
+          <button class="btn btn-ghost" id="newQuoteBtn" style="margin-top:20px;">↻ 换一句</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== DNA ====== -->
+    <section class="page" id="page-dna">
+      <div class="page-head">
+        <div class="page-title-block">
+          <span class="page-eyebrow">// error dna</span>
+          <h1 class="page-title">错题 <em>DNA</em></h1>
+          <p class="page-sub">解码你的错误模式，找到真正的薄弱点</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <h3>多维错题分析</h3>
+          <span class="card-title-tag">DNA MAP</span>
+        </div>
+        <div class="dna-grid">
+          <div>
+            <svg class="dna-radar" id="dnaRadar" viewBox="0 0 320 320"></svg>
+          </div>
+          <div class="dna-stats" id="dnaStats">
+            <div class="empty"><div class="empty-icon">○</div>请在"记录"页添加错题数据</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="card">
+          <div class="card-title"><h3>高频错误知识点</h3></div>
+          <div id="topicList">
+            <div class="empty"><div class="empty-icon">◇</div>暂无数据</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>时段错误规律</h3></div>
+          <div id="periodList">
+            <div class="empty"><div class="empty-icon">◇</div>暂无数据</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== PREDICT ====== -->
+    <section class="page" id="page-predict">
+      <div class="page-head">
+        <div class="page-title-block">
+          <span class="page-eyebrow">// future model</span>
+          <h1 class="page-title">学习<em>预测</em></h1>
+          <p class="page-sub">基于当前轨迹，预测未来 30 天的成绩走势</p>
+        </div>
+      </div>
+
+      <div class="card prediction-stage">
+        <div class="ai-stamp">NEXUS · PREDICTION ENGINE</div>
+        <h2 class="ai-headline" id="predHeadline">预测引擎<em>就绪</em></h2>
+        <div class="ai-body" id="predBody">
+          模型将根据你的学习时长、专注度、作息和当前成绩，模拟 30 天内的潜在提升路径。
+        </div>
+        <svg class="prediction-chart" id="predChart" viewBox="0 0 800 300" preserveAspectRatio="none"></svg>
+        <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:0.2em;margin-top:8px;">
+          <span>NOW</span><span>+10D</span><span>+20D</span><span>+30D</span>
+        </div>
+
+        <div class="pred-summary" id="predSummary"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== MOBILE NAV ===== -->
+<nav class="mobile-nav" id="mobileNav">
+  <div class="mnav-item active" data-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+    概览
+  </div>
+  <div class="mnav-item" data-page="plan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    计划
+  </div>
+  <div class="mnav-item" data-page="record">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z"/></svg>
+    记录
+  </div>
+  <div class="mnav-item" data-page="analysis">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+    分析
+  </div>
+  <div class="mnav-item" data-page="dna">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+    DNA
+  </div>
+  <div class="mnav-item" data-page="predict">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+    预测
+  </div>
+</nav>
+
+<div class="toast" id="toast"><div class="toast-icon">✓</div><span id="toastMsg">完成</span></div>
+
+<!-- ① Supabase UMD bundle — 必须用普通 script，不用 type="module"
+     这样 window.supabase 在同页面所有脚本中都可访问
+     必须通过 http:// 或 https:// 访问，不能 file:// 双击打开 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============================================================
+   NEXUS AUTH — 含开发调试模式开关 (DEV_MODE)
+
+   ┌─────────────────────────────────────────────┐
+   │  var DEV_MODE = true  → 自动登录测试用户    │
+   │                         完全跳过 Supabase   │
+   │  var DEV_MODE = false → 真实 Supabase 登录  │
+   └─────────────────────────────────────────────┘
+   ============================================================ */
+
+/* ══════════════════════════════════════════
+   🔧 开发模式开关 — 改这一行即可切换
+   ══════════════════════════════════════════ */
+var DEV_MODE = false;  // true = 开发调试模式 | false = 真实 Supabase 登录
+
+/* 开发模式下自动登录的测试用户 */
+var DEV_USER = {
+  id:       'dev_test_001',
+  username: '测试用户',
+  gender:   'male',
+  email:    'test@example.com'
+};
+
+/* ── 全局变量（var 保证跨 script 块可见）── */
+var currentUser = null;   // { username, gender }  ← 主脚本 init() 直接读取
+var _sbClient   = null;   // Supabase client 实例
+var _sbOnline   = false;  // Supabase 是否连通
+
+/* ── 配置（DEV_MODE=false 时生效）── */
+var SUPABASE_URL      = 'https://yhhtuzovgcidjcjixfpw.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_ko8ajci3F61KrIp-xKmnFQ_J5NfR_hH';
+/*
+  ⚠️ 若 Supabase 报 401，换成 anon public key（eyJ 开头）：
+  Dashboard → Settings → API → "anon public" → Copy
+*/
+
+var AUTH_SESSION_KEY = 'nexus_auth_session';
+var LOCAL_USERS_KEY  = 'nexus_local_users';
+
+/* ════════════════════════════════════
+   工具：DOM 操作
+   ════════════════════════════════════ */
+function authErrShow(id, msg) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function authErrHide(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '';
+  el.classList.remove('show');
+}
+function authBtnLoading(id, isLoading, label) {
+  var b = document.getElementById(id);
+  if (!b) return;
+  b.disabled = isLoading;
+  b.textContent = isLoading ? '请稍候…' : label;
+}
+function toEmail(username) {
+  return username.trim().toLowerCase() + '@nexus.app';
+}
+
+/* ── 错误翻译 ── */
+function translateAuthError(msg) {
+  msg = msg || '';
+  if (!msg) return '未知错误，请稍后重试';
+  if (msg.match(/Failed to fetch|NetworkError|fetch/i))
+    return '⚠️ 网络连接失败。请用 Live Server 打开（不能双击 file://）';
+  if (msg.match(/timeout|aborted/i))    return '请求超时，请检查网络后重试';
+  if (msg.match(/Invalid login|invalid_credentials|Email not confirmed/i)) return '用户名或密码错误，请重试';
+  if (msg.match(/already registered|User already registered/i)) return '该用户名已被注册，请换一个';
+  if (msg.match(/Password should be at least/i)) return '密码至少需要 6 位字符';
+  if (msg.match(/signup_disabled|Signups not allowed/i)) return '当前注册已关闭，请联系管理员';
+  if (msg.match(/rate limit|Email rate/i)) return '操作太频繁，请等 60 秒后重试';
+  if (msg.match(/invalid.*key|apikey|401/i)) return 'API Key 无效，请检查 Supabase 配置';
+  return msg;
+}
+
+/* ════════════════════════════════════
+   本地降级账号系统（Supabase 不可用时）
+   ════════════════════════════════════ */
+function localGetUsers() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '{}'); } catch(e) { return {}; }
+}
+function localSaveUsers(u) { localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(u)); }
+function localRegister(username, password, gender) {
+  var users = localGetUsers(), key = username.toLowerCase();
+  if (users[key]) return { data: null, error: { message: '该用户名已被注册，请换一个' } };
+  users[key] = { username: username, gender: gender, hash: btoa(password + '::nx'), ts: Date.now() };
+  localSaveUsers(users);
+  return { data: { user: { user_metadata: { username: username, gender: gender } } }, error: null };
+}
+function localLogin(username, password) {
+  var users = localGetUsers(), key = username.toLowerCase(), u = users[key];
+  if (!u) return { data: null, error: { message: 'Invalid login credentials' } };
+  if (u.hash !== btoa(password + '::nx')) return { data: null, error: { message: 'Invalid login credentials' } };
+  return { data: { user: { user_metadata: { username: u.username, gender: u.gender } } }, error: null };
+}
+
+/* ════════════════════════════════════
+   Supabase 初始化（DEV_MODE=false 时用）
+   ════════════════════════════════════ */
+function initSupabaseClient() {
+  try {
+    if (!window.supabase) { console.warn('[Nexus] window.supabase 未找到'); return false; }
+    _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, storageKey: 'nexus_sb_session' }
+    });
+    return true;
+  } catch(e) { console.warn('[Nexus] Supabase 初始化异常:', e.message); return false; }
+}
+function checkConnectivity() {
+  if (!_sbClient) return Promise.resolve(false);
+  return Promise.race([
+    _sbClient.auth.getSession().then(function() { return true; }),
+    new Promise(function(resolve) { setTimeout(function() { resolve(false); }, 5000); })
+  ]).catch(function() { return false; });
+}
+
+/* ════════════════════════════════════
+   UI 切换（HTML onclick 直接调用）
+   ════════════════════════════════════ */
+function switchTab(tab) {
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabReg').classList.toggle('active', tab === 'register');
+  document.getElementById('loginForm').style.display    = tab === 'login'    ? 'flex' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? 'flex' : 'none';
+  authErrHide('loginErr'); authErrHide('regErr');
+}
+function selectGender(el) {
+  document.querySelectorAll('.auth-gender-opt').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+/* ════════════════════════════════════
+   进入主界面（DEV 自动登录 / 真实登录 共用）
+   ════════════════════════════════════ */
+function enterApp(username, gender) {
+  currentUser = { username: username, gender: gender };   // ← 全局赋值，主脚本直接读
+
+  document.getElementById('authOverlay').style.display = 'none';
+
+  var emoji      = gender === 'female' ? '👧' : '👦';
+  var genderText = gender === 'female' ? '女生' : '男生';
+  var modeText   = DEV_MODE ? '🔧 调试' : (_sbOnline ? '☁️ 云端' : '📱 本地');
+
+  document.getElementById('userAvatarSm').textContent  = emoji;
+  document.getElementById('userNameSm').textContent    = username;
+  document.getElementById('userGenderSm').textContent  = genderText + ' · ' + modeText;
+  document.getElementById('userBadge').style.display   = 'flex';
+
+  setTimeout(function() {
+    var safeN = typeof escapeHtml === 'function' ? escapeHtml(username) : username;
+    var greet = document.querySelector('.companion-greet');
+    if (greet) greet.innerHTML = '你好，<em>' + safeN + '</em> ' + emoji;
+    var title = document.querySelector('#page-dashboard .page-title');
+    if (title) title.innerHTML = '你好，<em>' + safeN + '</em>';
+    if (typeof init === 'function') init();
+  }, 80);
+}
+
+/* ════════════════════════════════════
+   登录
+   ════════════════════════════════════ */
+async function doLogin() {
+  /* DEV_MODE：跳过表单，直接进入 */
+  if (DEV_MODE) { enterApp(DEV_USER.username, DEV_USER.gender); return; }
+
+  var username = (document.getElementById('loginUsername').value || '').trim();
+  var password = document.getElementById('loginPassword').value || '';
+  authErrHide('loginErr');
+  if (!username) { authErrShow('loginErr', '请输入用户名'); return; }
+  if (!password) { authErrShow('loginErr', '请输入密码'); return; }
+  authBtnLoading('loginBtn', true, '登录');
+  try {
+    var result = _sbOnline && _sbClient
+      ? await _sbClient.auth.signInWithPassword({ email: toEmail(username), password: password })
+      : localLogin(username, password);
+    authBtnLoading('loginBtn', false, '登录');
+    if (result.error) { authErrShow('loginErr', translateAuthError(result.error.message)); return; }
+    var gender = (result.data && result.data.user && result.data.user.user_metadata && result.data.user.user_metadata.gender) || 'male';
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ username: username, gender: gender }));
+    enterApp(username, gender);
+  } catch(e) {
+    authBtnLoading('loginBtn', false, '登录');
+    authErrShow('loginErr', translateAuthError(e.message || String(e)));
+  }
+}
+
+/* ════════════════════════════════════
+   注册
+   ════════════════════════════════════ */
+async function doRegister() {
+  /* DEV_MODE：跳过注册，直接进入 */
+  if (DEV_MODE) { enterApp(DEV_USER.username, DEV_USER.gender); return; }
+
+  var username = (document.getElementById('regUsername').value || '').trim();
+  var password  = document.getElementById('regPassword').value || '';
+  var genderEl  = document.querySelector('.auth-gender-opt.selected');
+  var gender    = genderEl ? genderEl.dataset.gender : 'male';
+  authErrHide('regErr');
+  if (!username || username.length < 3) { authErrShow('regErr', '用户名至少 3 个字符'); return; }
+  if (!/^[a-zA-Z0-9一-龥_-]+$/.test(username)) { authErrShow('regErr', '用户名只能含字母、数字、中文或 _-'); return; }
+  if (!password || password.length < 6) { authErrShow('regErr', '密码至少 6 位'); return; }
+  authBtnLoading('regBtn', true, '创建账号');
+  try {
+    var signUpResult, signInResult;
+    if (_sbOnline && _sbClient) {
+      signUpResult = await _sbClient.auth.signUp({ email: toEmail(username), password: password, options: { data: { username: username, gender: gender } } });
+      if (signUpResult.error) { authBtnLoading('regBtn', false, '创建账号'); authErrShow('regErr', translateAuthError(signUpResult.error.message)); return; }
+      var u = signUpResult.data && signUpResult.data.user;
+      if (u && u.identities && u.identities.length === 0) {
+        authBtnLoading('regBtn', false, '创建账号');
+        authErrShow('regErr', '账号已存在或需邮件确认。请在 Supabase 控制台关闭 "Confirm email"');
+        return;
+      }
+      signInResult = await _sbClient.auth.signInWithPassword({ email: toEmail(username), password: password });
+    } else {
+      signUpResult = localRegister(username, password, gender);
+      if (signUpResult.error) { authBtnLoading('regBtn', false, '创建账号'); authErrShow('regErr', signUpResult.error.message); return; }
+      signInResult = localLogin(username, password);
+    }
+    authBtnLoading('regBtn', false, '创建账号');
+    if (signInResult.error) { switchTab('login'); document.getElementById('loginUsername').value = username; if (typeof toast === 'function') toast('✓ 注册成功，请登录'); return; }
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ username: username, gender: gender }));
+    enterApp(username, gender);
+  } catch(e) {
+    authBtnLoading('regBtn', false, '创建账号');
+    authErrShow('regErr', translateAuthError(e.message || String(e)));
+  }
+}
+
+/* ════════════════════════════════════
+   退出登录
+   ════════════════════════════════════ */
+async function doLogout() {
+  if (DEV_MODE) {
+    if (!confirm('退出调试用户？将立即重新自动登录')) return;
+    currentUser = null;
+    document.getElementById('userBadge').style.display = 'none';
+    document.getElementById('authOverlay').style.display = 'flex';
+    setTimeout(function() { enterApp(DEV_USER.username, DEV_USER.gender); }, 500);
+    return;
+  }
+  if (!confirm('确定要退出登录吗？')) return;
+  try { if (_sbOnline && _sbClient) await _sbClient.auth.signOut(); } catch(e) {}
+  localStorage.removeItem(AUTH_SESSION_KEY);
+  currentUser = null;
+  document.getElementById('authOverlay').style.display = 'flex';
+  document.getElementById('userBadge').style.display   = 'none';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  switchTab('login');
+}
+
+/* ════════════════════════════════════
+   启动 / session 恢复
+   ════════════════════════════════════ */
+async function bootAuth() {
+  var overlay   = document.getElementById('authOverlay');
+  var modeHint  = document.getElementById('authModeHint');
+  var devBanner = document.getElementById('devBanner');
+
+  /* ══ DEV_MODE 分支：完全跳过 Supabase，零网络请求 ══ */
+  if (DEV_MODE) {
+    overlay.style.display = 'none';
+    if (devBanner) devBanner.style.display = 'flex';
+    document.body.classList.add('dev-mode-on');
+    if (modeHint) {
+      modeHint.textContent = '🔧 开发调试模式 · Supabase 已禁用';
+      modeHint.style.color = 'var(--warn)';
+    }
+    console.info('[Nexus DEV] DEV_MODE=true，自动登录:', DEV_USER.username);
+    enterApp(DEV_USER.username, DEV_USER.gender);
+    return;   // ← 结束，完全不执行 Supabase 任何代码
+  }
+
+  /* ══ 正式模式（DEV_MODE=false）══ */
+  overlay.style.display = 'none';
+  var sdkReady = initSupabaseClient();
+  if (sdkReady) {
+    if (modeHint) modeHint.textContent = '正在连接云端…';
+    _sbOnline = await checkConnectivity();
+  }
+  if (modeHint) {
+    modeHint.textContent = _sbOnline ? '☁️ 云端模式 · 数据安全同步' : '📱 本地模式 · 数据保存在设备';
+    modeHint.style.color = _sbOnline ? 'var(--good)' : 'var(--warn)';
+  }
+
+  var restored = false;
+
+  /* 恢复 Supabase session */
+  if (_sbOnline && _sbClient) {
+    try {
+      var sessionRes = await _sbClient.auth.getSession();
+      var session    = sessionRes.data && sessionRes.data.session;
+      if (session && session.user) {
+        var cached   = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
+        var uname    = cached.username || session.user.email.replace('@nexus.app', '');
+        var gdr      = cached.gender   || (session.user.user_metadata && session.user.user_metadata.gender) || 'male';
+        enterApp(uname, gdr);
+        restored = true;
+      }
+    } catch(e) { console.warn('[Nexus] session 恢复失败:', e.message); }
+  }
+
+  /* 恢复本地 session */
+  if (!restored) {
+    try {
+      var cached2 = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
+      if (cached2.username && !_sbOnline) {
+        var users2 = localGetUsers();
+        if (users2[cached2.username.toLowerCase()]) { enterApp(cached2.username, cached2.gender || 'male'); restored = true; }
+      }
+    } catch(e) {}
+  }
+
+  if (!restored) overlay.style.display = 'flex';
+
+  /* onAuthStateChange */
+  if (_sbOnline && _sbClient) {
+    _sbClient.auth.onAuthStateChange(function(event, session) {
+      if (event === 'TOKEN_REFRESHED' && session) {
+        var c = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
+        if (c.username) { c.refreshed = Date.now(); localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(c)); }
+      }
+      if (event === 'SIGNED_OUT' && currentUser) {
+        currentUser = null;
+        localStorage.removeItem(AUTH_SESSION_KEY);
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('userBadge').style.display   = 'none';
+        switchTab('login');
+      }
+    });
+  }
+}
+
+/* ── Enter 键绑定 + 启动 ── */
+document.addEventListener('DOMContentLoaded', function() {
+  ['loginUsername', 'loginPassword'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  });
+  ['regUsername', 'regPassword'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function(e) { if (e.key === 'Enter') doRegister(); });
+  });
+  bootAuth();
+});
+</script>
+
+<script>
+/* ============================================================
+   NEXUS · 学习伙伴 — 核心逻辑
+   ============================================================ */
+
+const STORE_KEY = 'nexus_study_v1';
+
+const defaultStore = {
+  plans: [],
+  records: [],
+  errors: [],
+  pomodoroCount: 0,
+  pomodoroDate: '',
+  settings: { name: '同学' }
+};
+
+let store = loadStore();
+
+function loadStore(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(defaultStore));
+    return Object.assign(JSON.parse(JSON.stringify(defaultStore)), JSON.parse(raw));
+  } catch(e){
+    return JSON.parse(JSON.stringify(defaultStore));
+  }
+}
+
+function saveStore(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+}
+
+const $ = q => document.querySelector(q);
+const $$ = q => Array.from(document.querySelectorAll(q));
+
+/* === Toast === */
+let toastTimer;
+function toast(msg){
+  $('#toastMsg').textContent = msg;
+  $('#toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> $('#toast').classList.remove('show'), 2200);
+}
+
+/* === Date helpers === */
+function today(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(s){ const d = new Date(s); return `${d.getMonth()+1}.${d.getDate()}`; }
+function daysAgo(n){ const d = new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+
+/* === Navigation === */
+function go(page){
+  $$('.page').forEach(p => p.classList.remove('active'));
+  $(`#page-${page}`).classList.add('active');
+  $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  $$('.mnav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+  $('#sidebar').classList.remove('open');
+
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'plan') renderPlanPage();
+  if (page === 'record') renderRecordPage();
+  if (page === 'analysis') renderAnalysis();
+  if (page === 'dna') renderDNA();
+  if (page === 'predict') renderPrediction();
+}
+
+$$('.nav-item, .mnav-item').forEach(el => {
+  el.addEventListener('click', () => go(el.dataset.page));
+});
+
+document.addEventListener('click', e => {
+  const jumpEl = e.target.closest('[data-page-jump]');
+  if (jumpEl) go(jumpEl.dataset.pageJump);
+});
+
+$('#menuToggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+
+/* === Date chip === */
+function updateDateChip(){
+  const d = new Date();
+  const days = ['日','一','二','三','四','五','六'];
+  $('#dateChip').textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} · 周${days[d.getDay()]}`;
+}
+
+/* ===========================================================
+   AI 分析引擎
+   =========================================================== */
+
+function aiAnalyze(){
+  const recs = store.records;
+  const errs = store.errors;
+  const result = {
+    metrics: {
+      efficiency: 0,    // 学习效率
+      procrastination: 0, // 拖延风险
+      stress: 0,         // 压力
+      focus: 0,          // 专注力
+      health: 0,         // 作息健康
+      bias: 0            // 偏科
+    },
+    summary: '',
+    suggestions: [],
+    headline: '',
+    health: 0,
+    mood: '愉快',
+    energy: '能量充沛',
+    subjects: {},
+    weeklyHours: 0,
+    avgFocus: 0,
+    bestSubject: '-',
+    weakSubject: '-'
+  };
+
+  if (recs.length === 0){
+    result.headline = '让我先看看你的学习<em>数据</em>⋯';
+    result.summary = '尚未录入足够数据。请先在"记录"页填写至少 1 天的学习信息，AI 会立刻为你生成日报。';
+    return result;
+  }
+
+  // 7 days
+  const sevenDay = recs.filter(r => r.date >= daysAgo(7));
+  const totalMin = sevenDay.reduce((a,r)=>a+(+r.duration||0), 0);
+  result.weeklyHours = +(totalMin/60).toFixed(1);
+
+  // by subject
+  const subjMap = {};
+  recs.forEach(r => {
+    if (!subjMap[r.subject]) subjMap[r.subject] = { duration: 0, scores: [], focus: [] };
+    subjMap[r.subject].duration += (+r.duration||0);
+    if (r.score) subjMap[r.subject].scores.push(+r.score);
+    if (r.focus) subjMap[r.subject].focus.push(+r.focus);
+  });
+  result.subjects = subjMap;
+
+  // best/weak by score
+  let bestS = -1, bestN = '-';
+  let weakS = 1000, weakN = '-';
+  Object.entries(subjMap).forEach(([k,v]) => {
+    if (v.scores.length){
+      const avg = v.scores.reduce((a,b)=>a+b,0)/v.scores.length;
+      if (avg > bestS){ bestS = avg; bestN = k; }
+      if (avg < weakS){ weakS = avg; weakN = k; }
+    }
+  });
+  result.bestSubject = bestN;
+  result.weakSubject = weakN;
+
+  // avg focus
+  const allFocus = recs.map(r=>+r.focus||0).filter(Boolean);
+  result.avgFocus = allFocus.length ? +(allFocus.reduce((a,b)=>a+b,0)/allFocus.length).toFixed(1) : 0;
+
+  // metrics
+  // 学习效率 (focus * duration / 100)
+  result.metrics.focus = Math.min(100, result.avgFocus * 10);
+  // 学习效率 = 专注度 + 时长充足度
+  const dailyAvg = totalMin / Math.max(1, sevenDay.length);
+  const efficiency = (result.avgFocus * 6) + Math.min(40, dailyAvg / 3);
+  result.metrics.efficiency = Math.round(efficiency);
+
+  // 拖延风险 = 计划完成情况
+  const totalPlans = store.plans.length;
+  const donePlans = store.plans.filter(p=>p.done).length;
+  const procrast = totalPlans ? Math.round((1 - donePlans/totalPlans) * 100) : 30;
+  result.metrics.procrastination = procrast;
+
+  // 压力指数：基于心情、专注度的反向、低睡眠
+  const moods = recs.map(r=>+r.mood||3);
+  const avgMood = moods.length ? moods.reduce((a,b)=>a+b,0)/moods.length : 3;
+  const sleeps = recs.map(r=>+r.sleep||0).filter(Boolean);
+  const avgSleep = sleeps.length ? sleeps.reduce((a,b)=>a+b,0)/sleeps.length : 7;
+  let stress = 0;
+  stress += (5 - avgMood) * 15;
+  stress += Math.max(0, (8 - avgSleep)) * 8;
+  stress += (10 - result.avgFocus) * 3;
+  result.metrics.stress = Math.max(5, Math.min(100, Math.round(stress)));
+
+  // 作息健康度
+  let health = 100;
+  if (avgSleep < 6) health -= 35;
+  else if (avgSleep < 7) health -= 20;
+  else if (avgSleep < 7.5) health -= 10;
+  if (avgSleep > 9) health -= 8;
+  result.metrics.health = Math.max(10, Math.round(health));
+
+  // 偏科指数
+  const durations = Object.values(subjMap).map(v=>v.duration);
+  let bias = 0;
+  if (durations.length > 1){
+    const mean = durations.reduce((a,b)=>a+b,0)/durations.length;
+    const variance = durations.reduce((a,b)=>a+(b-mean)**2,0)/durations.length;
+    const std = Math.sqrt(variance);
+    bias = Math.min(100, Math.round((std / mean) * 70));
+  }
+  result.metrics.bias = bias;
+
+  // 整体健康度
+  const overall = (
+    result.metrics.efficiency * 0.3 +
+    (100 - result.metrics.procrastination) * 0.15 +
+    (100 - result.metrics.stress) * 0.2 +
+    result.metrics.focus * 0.15 +
+    result.metrics.health * 0.2
+  );
+  result.health = Math.round(overall);
+
+  // headline + summary
+  if (result.health >= 80){
+    result.headline = '你的状态<em>非常出色</em>，继续保持！';
+    result.summary = `本周累计学习 ${result.weeklyHours} 小时，平均专注度 ${result.avgFocus} / 10。各项指标都在健康区间，特别是${bestN !== '-' ? `${bestN}的表现最为突出` : '整体节奏稳定'}。建议保持当前节奏，并适度挑战更高目标。`;
+    result.mood = '神采奕奕';
+    result.energy = '能量爆棚';
+  } else if (result.health >= 60){
+    result.headline = '整体不错，但有<em>提升空间</em>';
+    result.summary = `本周累计学习 ${result.weeklyHours} 小时，平均专注度 ${result.avgFocus} / 10。${result.metrics.stress > 60 ? '压力指数偏高，' : ''}${result.metrics.health < 70 ? '作息有改善空间，' : ''}${weakN !== '-' && weakN !== bestN ? `${weakN}相对薄弱，` : ''}建议针对性调整，效果会更好。`;
+    result.mood = '稳步前进';
+    result.energy = '状态良好';
+  } else if (result.health >= 40){
+    result.headline = '需要<em>调整</em>一下节奏了';
+    result.summary = `本周累计学习 ${result.weeklyHours} 小时，平均专注度 ${result.avgFocus} / 10。压力指数 ${result.metrics.stress}，作息健康 ${result.metrics.health}。建议先把睡眠和情绪调整好，再谈学习效率。Nexus 陪着你慢慢来。`;
+    result.mood = '需要支持';
+    result.energy = '能量偏低';
+  } else {
+    result.headline = '我看到你<em>累了</em>，先休息';
+    result.summary = `当前各项指标显示你处于过度疲劳状态。学习是马拉松，不是冲刺。请优先恢复睡眠（建议 7-8 小时），降低短期目标，用一周时间慢慢回到状态。Nexus 不会催你，我会等。`;
+    result.mood = '需要拥抱';
+    result.energy = '建议休整';
+  }
+
+  // suggestions
+  const sugs = [];
+  if (result.metrics.bias > 50){
+    sugs.push({ icon: '◐', type: 'warn', title: '偏科警报', desc: `${weakN !== '-' ? weakN : '某些科目'}的学习时间显著少于其他科目。建议每天至少投入 30 分钟，让所有科目均衡发展。` });
+  }
+  if (result.metrics.procrastination > 60){
+    sugs.push({ icon: '⌚', type: 'warn', title: '拖延风险偏高', desc: `计划完成率仅 ${100-procrast}%。建议把大计划拆成 25 分钟的番茄钟小任务，完成感会推动你继续。` });
+  }
+  if (avgSleep < 7){
+    sugs.push({ icon: '☾', type: 'warn', title: '作息提醒', desc: `平均睡眠 ${avgSleep.toFixed(1)} 小时，低于推荐值。睡眠不足会直接削弱第二天的专注力 30% 以上。` });
+  }
+  if (result.metrics.stress > 65){
+    sugs.push({ icon: '◇', type: 'warn', title: '压力较大', desc: '心情评分和专注度都在下滑。试试每天 10 分钟散步或冥想，给大脑一些喘息空间。' });
+  }
+  if (result.avgFocus >= 7 && result.weeklyHours >= 20){
+    sugs.push({ icon: '✦', type: 'good', title: '高效学习者', desc: '专注度和投入度双高，这是黄金状态。可以尝试挑战更难的题目或参加竞赛。' });
+  }
+  if (totalMin === 0){
+    sugs.push({ icon: '○', type: 'good', title: '开始记录', desc: '坚持每天记录学习数据，AI 才能为你生成更精准的洞察。' });
+  }
+  if (sugs.length === 0){
+    sugs.push({ icon: '✓', type: 'good', title: '一切正常', desc: '各项指标都在健康区间，继续保持你的节奏。' });
+    sugs.push({ icon: '↗', type: 'good', title: '可以加点挑战', desc: '当前状态稳定，可以尝试增加 10% 的学习时长或挑战更高难度。' });
+  }
+
+  result.suggestions = sugs.slice(0, 3);
+
+  return result;
+}
+
+const ENCOURAGES = [
+  '今天的努力，会成为明天的光。',
+  '不必走得快，只要不停下。',
+  '专注 25 分钟，胜过分心 2 小时。',
+  '比起聪明，持续更难得。',
+  '复盘一次，胜过盲目刷题十次。',
+  '允许自己慢，但别允许自己停。',
+  '每一道错题，都是未来的护城河。',
+  '今天偷的懒，是给明天的难题。',
+  '相信复利的力量，每天进步一点点。',
+  '把焦虑写成计划，把计划拆成动作。'
+];
+
+/* ===========================================================
+   渲染函数
+   =========================================================== */
+
+function renderDashboard(){
+  const a = aiAnalyze();
+
+  // KPI
+  $('#kpiHours').textContent = a.weeklyHours;
+  $('#kpiFocus').textContent = a.avgFocus || '0';
+
+  // trend texts
+  const last7 = store.records.filter(r => r.date >= daysAgo(7));
+  const prev7 = store.records.filter(r => r.date >= daysAgo(14) && r.date < daysAgo(7));
+  const lastH = last7.reduce((a,r)=>a+(+r.duration||0),0)/60;
+  const prevH = prev7.reduce((a,r)=>a+(+r.duration||0),0)/60;
+  if (prevH > 0){
+    const d = ((lastH-prevH)/prevH*100).toFixed(0);
+    $('#kpiHoursTrend').textContent = `${d>=0?'↗':'↘'} 较上周 ${d>=0?'+':''}${d}%`;
+    $('#kpiHoursTrend').className = `kpi-trend ${d>=0?'up':'down'}`;
+  } else {
+    $('#kpiHoursTrend').textContent = '→ 持续记录解锁趋势';
+  }
+
+  const lastFocus = last7.map(r=>+r.focus||0).filter(Boolean);
+  if (lastFocus.length){
+    const fAvg = lastFocus.reduce((a,b)=>a+b,0)/lastFocus.length;
+    $('#kpiFocusTrend').textContent = `${fAvg>=7?'◉ 状态在线':fAvg>=5?'◐ 一般水平':'○ 需要调整'}`;
+    $('#kpiFocusTrend').className = `kpi-trend ${fAvg>=7?'up':fAvg>=5?'':'down'}`;
+  }
+
+  // Companion
+  $('#companionMsg').innerHTML = a.summary;
+  $('#aiMoodText').textContent = `伙伴状态：${a.mood}`;
+  $('#aiEnergyText').textContent = a.energy;
+
+  // dashSub
+  $('#dashSub').textContent = store.records.length === 0 ? '让我们先记录你的第一天学习数据' :
+    a.health >= 80 ? '今天的你状态绝佳' :
+    a.health >= 60 ? '一切都在轨道上' :
+    a.health >= 40 ? '今天可以稍微放慢一点' :
+    '记得照顾好自己';
+
+  updateAvatarMood(a.health);
+
+  // Subject bars
+  const sList = $('#subjectList');
+  if (Object.keys(a.subjects).length === 0){
+    sList.innerHTML = '<div class="empty"><div class="empty-icon">○</div>尚无学习记录</div>';
+  } else {
+    const max = Math.max(...Object.values(a.subjects).map(s=>s.duration));
+    sList.innerHTML = Object.entries(a.subjects)
+      .sort((a,b)=>b[1].duration-a[1].duration)
+      .slice(0,7)
+      .map(([k,v]) => `
+        <div class="subject-row">
+          <span class="subject-name">${k}</span>
+          <div class="subject-bar"><div class="subject-bar-fill" style="width:${(v.duration/max*100).toFixed(0)}%"></div></div>
+          <span class="subject-value">${(v.duration/60).toFixed(1)}h</span>
+        </div>`).join('');
+  }
+
+  // Donut
+  const offset = 408 - (408 * a.health / 100);
+  setTimeout(()=> $('#donutFill').style.strokeDashoffset = offset, 100);
+  animateNumber('#donutNum', 0, a.health, 1200);
+
+  // Focus chart
+  drawFocusChart();
+
+  // Heatmap
+  drawHeatmap();
+
+  // Today plans
+  const todayPlans = store.plans.filter(p => p.date === today() || (!p.date));
+  const tpList = $('#todayPlanList');
+  if (todayPlans.length === 0){
+    tpList.innerHTML = '<div class="empty"><div class="empty-icon">◇</div>今日还没有计划，去添加一个吧</div>';
+  } else {
+    tpList.innerHTML = todayPlans.slice(0,5).map(p => planItemHTML(p)).join('');
+    bindPlanEvents(tpList);
+  }
+
+  /* ✦ 新增：AI 日报 + 人格分析 */
+  renderAIDaily(a);
+  renderPersonality(a);
+}
+
+/* ════════════════════════════════════════════════════
+   ✦ AI 今日学习日报渲染
+   ════════════════════════════════════════════════════ */
+function renderAIDaily(a){
+  /* 时间 */
+  const now = new Date();
+  const h = now.getHours();
+  const period = h < 6 ? '深夜' : h < 11 ? '上午' : h < 14 ? '中午' : h < 18 ? '下午' : h < 22 ? '晚上' : '夜间';
+  const el = $('#aiDailyTime');
+  if(el) el.textContent = `${period} ${String(h).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  /* 标题 — 根据健康度 */
+  const titles = [
+    ['今天你的状态<em>特别好</em> ✨', 80],
+    ['整体不错，继续<em>稳稳前行</em> 🌿', 60],
+    ['今天有点累，<em>照顾好自己</em> 🌙', 40],
+    ['感觉到你的<em>疲惫</em>，先休息一下 💛', 0]
+  ];
+  const titleEl = $('#aiDailyTitle');
+  if(titleEl){
+    const t = titles.find(([,threshold]) => a.health >= threshold);
+    titleEl.innerHTML = t ? t[0] : titles[titles.length-1][0];
+  }
+
+  /* 数据指标胶囊 */
+  const pillsEl = $('#aiDailyPills');
+  if(pillsEl){
+    const pills = [
+      { label:'本周学习', val: a.weeklyHours + 'h' },
+      { label:'专注指数', val: (a.avgFocus || 0) + '/10' },
+      { label:'健康综合', val: a.health + '' },
+      { label:'最强科目', val: a.bestSubject !== '-' ? a.bestSubject : '待录入' },
+    ];
+    pillsEl.innerHTML = pills.map(p =>
+      `<div class="ai-daily-pill"><span>${p.label}</span><span class="pill-val">${p.val}</span></div>`
+    ).join('');
+  }
+
+  /* 打字机正文 — 人格化表达 */
+  const texts = {
+    high: [
+      `我发现你最近的状态真的很好，本周已经积累了 ${a.weeklyHours} 小时的学习时间，专注度维持在 ${a.avgFocus} 分。${a.bestSubject !== '-' ? `${a.bestSubject}的表现尤其突出，` : ''}这种节奏很健康，继续保持就好。`,
+      `嗯，今天的你让我感到欣慰。学习时长稳定，专注度不错，情绪也在舒适区里。有时候"持续"比"冲刺"更难做到，而你正在做到。`,
+    ],
+    mid: [
+      `我注意到你最近的状态有一些波动，本周学了 ${a.weeklyHours} 小时。${a.weakSubject !== '-' && a.weakSubject !== a.bestSubject ? `${a.weakSubject}的投入相对少一些，` : ''}不必担心，慢慢调整就好。`,
+      `感觉你最近压力不小，但你还是坚持记录、坚持学习。这份坚持本身，就很了不起。今天试着把任务拆小一点，完成一件事就奖励自己。`,
+    ],
+    low: [
+      `我能感受到你最近有些疲惫，学习数据告诉我你的节奏可能太紧了。睡个好觉、吃顿饱饭，有时候是最好的学习方式。`,
+      `学习是一段长跑，偶尔放慢是为了跑得更远。今天哪怕只完成一件小事，也已经很好了。我陪着你。`,
+    ],
+    empty: [
+      `嗨！我还不太了解你的学习状态。去"记录"页填写第一条学习数据，我就能开始为你分析、陪伴了 🌱`,
+    ]
+  };
+
+  let textPool;
+  if(store.records.length === 0) textPool = texts.empty;
+  else if(a.health >= 75) textPool = texts.high;
+  else if(a.health >= 45) textPool = texts.mid;
+  else textPool = texts.low;
+
+  const chosen = textPool[Math.floor(Math.random() * textPool.length)];
+
+  /* 打字机动画 */
+  const textEl = $('#aiDailyText');
+  const cursor = $('#aiCursor');
+  if(textEl){
+    textEl.textContent = '';
+    if(cursor) cursor.style.display = 'inline-block';
+    let i = 0;
+    const interval = setInterval(() => {
+      if(i < chosen.length){
+        textEl.textContent += chosen[i++];
+      } else {
+        clearInterval(interval);
+        setTimeout(() => { if(cursor) cursor.style.display = 'none'; }, 800);
+      }
+    }, 22);
+  }
+
+  /* 鼓励语 */
+  const encourages = [
+    '今天的每一分钟，都是明天的底气。',
+    '比昨天多学一点点，就是进步。',
+    '不必走得快，只要不停下。',
+    '你的努力，我都看见了。',
+    '允许自己慢，但别允许自己放弃。',
+    '专注 25 分钟，胜过分心 2 小时。',
+    '把焦虑写成计划，把计划拆成行动。',
+    '每一道错题，都是未来的护城河。',
+    '相信复利的力量，每天进步一点点。',
+    '今晚睡个好觉，明天继续加油。',
+  ];
+  const encEl = $('#aiDailyEncourage');
+  if(encEl) encEl.textContent = '"' + encourages[Math.floor(Math.random() * encourages.length)] + '"';
+}
+
+/* ════════════════════════════════════════════════════
+   ✦ 学习人格分析渲染
+   ════════════════════════════════════════════════════ */
+function renderPersonality(a){
+  /* 根据数据判断人格类型 */
+  const recs   = store.records;
+  const avgSleep = recs.length ? recs.reduce((s,r)=>s+(+r.sleep||7),0)/recs.length : 7;
+  const lateNight = recs.filter(r => +r.sleep < 6).length / Math.max(recs.length,1);
+  const avgFocus  = a.avgFocus || 0;
+  const weekH     = a.weeklyHours || 0;
+
+  const types = [
+    {
+      cond: avgFocus >= 8 && weekH >= 15 && lateNight < 0.3,
+      icon: '🚀', name: '高效冲刺型',
+      sub: 'HIGH PERFORMANCE',
+      color: 'rgba(139,191,212,0.2)',
+      border: 'rgba(139,191,212,0.4)',
+      desc: '我发现你是那种一旦进入状态就停不下来的人。专注度高、节奏稳定，是很多人羡慕的学习方式。记得给自己一些喘息的空间。',
+      traits: ['专注力强', '节奏稳定', '自律达人', '高效学习'],
+    },
+    {
+      cond: lateNight >= 0.4 && avgFocus >= 6,
+      icon: '🌙', name: '夜间高效型',
+      sub: 'NIGHT OWL MODE',
+      color: 'rgba(201,168,184,0.2)',
+      border: 'rgba(201,168,184,0.4)',
+      desc: '你的大脑在夜深人静时最为活跃。这种方式有它的魔力，但记得照顾好睡眠，白天的恢复同样重要。',
+      traits: ['夜间高效', '独立思考', '沉浸感强', '注意休息'],
+    },
+    {
+      cond: weekH >= 20 && avgFocus < 6,
+      icon: '⚡', name: '持久耐力型',
+      sub: 'ENDURANCE MODE',
+      color: 'rgba(224,201,168,0.2)',
+      border: 'rgba(224,201,168,0.4)',
+      desc: '你愿意花大量时间坐在书桌前，这份坚持本身就很了不起。也许提升专注质量，会让同样的时间产生更多收获。',
+      traits: ['时间投入多', '意志力强', '耐心十足', '可提升专注'],
+    },
+    {
+      cond: avgFocus >= 7 && weekH < 10,
+      icon: '💎', name: '精准高效型',
+      sub: 'SMART & FOCUSED',
+      color: 'rgba(168,207,224,0.2)',
+      border: 'rgba(168,207,224,0.4)',
+      desc: '你学习时间不多，但质量很高。专注度好，效率优先。适当增加一点学习时长，成绩提升会很明显。',
+      traits: ['高专注', '效率优先', '质量导向', '可增加时长'],
+    },
+    {
+      cond: recs.length === 0,
+      icon: '🌱', name: '成长探索型',
+      sub: 'JUST GETTING STARTED',
+      color: 'rgba(122,191,150,0.2)',
+      border: 'rgba(122,191,150,0.4)',
+      desc: '每个学习高手都从第一条记录开始。去"记录"页填写今天的学习数据，我就能为你生成专属的人格分析了。',
+      traits: ['潜力无限', '勇于开始', '探索精神'],
+    },
+    {
+      cond: true, /* 默认 */
+      icon: '🌿', name: '稳定成长型',
+      sub: 'STEADY GROWTH',
+      color: 'rgba(168,207,224,0.15)',
+      border: 'rgba(168,207,224,0.3)',
+      desc: '你的学习节奏稳健，不急不躁。这种稳定性是长期进步最重要的底色。继续保持，成果会慢慢显现。',
+      traits: ['节奏稳健', '持续积累', '不急不躁', '长期主义'],
+    },
+  ];
+
+  const type = types.find(t => t.cond);
+  if(!type) return;
+
+  const iconEl      = $('#personalityIcon');
+  const nameEl      = $('#personalityName');
+  const subEl       = $('#personalitySubtitle');
+  const descEl      = $('#personalityDesc');
+  const traitsEl    = $('#personalityTraits');
+  const cardEl      = $('#personalityCard');
+  const particlesEl = $('#personalityParticles');
+
+  if(iconEl)   iconEl.textContent = type.icon;
+  if(nameEl)   nameEl.textContent = type.name;
+  if(subEl)    subEl.textContent  = type.sub;
+  if(descEl)   descEl.textContent = type.desc;
+  if(traitsEl) traitsEl.innerHTML = type.traits.map(t =>
+    `<span class="trait-tag">${t}</span>`).join('');
+
+  /* 卡片发光色 */
+  if(cardEl){
+    cardEl.style.background = `linear-gradient(135deg, ${type.color} 0%, rgba(20,18,14,0.4) 100%)`;
+    cardEl.style.borderColor = type.border;
+    cardEl.style.boxShadow   = `0 4px 30px rgba(0,0,0,0.2), 0 0 0 1px ${type.border}`;
+  }
+
+  /* 微粒子效果 */
+  if(particlesEl){
+    particlesEl.innerHTML = '';
+    const count = 8;
+    for(let i = 0; i < count; i++){
+      const dot = document.createElement('div');
+      dot.className = 'p-dot';
+      const size = 2 + Math.random() * 3;
+      dot.style.cssText = [
+        `width:${size}px`, `height:${size}px`,
+        `left:${10 + Math.random()*80}%`,
+        `bottom:${Math.random()*30}%`,
+        `background:${type.border}`,
+        `animation-duration:${3 + Math.random()*4}s`,
+        `animation-delay:${Math.random()*3}s`,
+      ].join(';');
+      particlesEl.appendChild(dot);
+    }
+  }
+}
+
+function updateAvatarMood(score){
+  const mouth = $('#avatarMouth');
+  if (!mouth) return;
+  if (score >= 75){
+    mouth.setAttribute('d', 'M 88 113 Q 100 125 112 113');
+  } else if (score >= 50){
+    mouth.setAttribute('d', 'M 90 116 Q 100 121 110 116');
+  } else if (score >= 30){
+    mouth.setAttribute('d', 'M 90 117 L 110 117');
+  } else {
+    mouth.setAttribute('d', 'M 90 119 Q 100 113 110 119');
+  }
+}
+
+function drawFocusChart(){
+  const svg = $('#focusChart');
+  const last7 = [];
+  for (let i = 6; i >= 0; i--){
+    const d = daysAgo(i);
+    const recs = store.records.filter(r => r.date === d);
+    const focus = recs.length ? recs.reduce((a,r)=>a+(+r.focus||0),0)/recs.length : null;
+    last7.push({ d, focus });
+  }
+
+  const W = 300, H = 160, P = 16;
+  const xs = (i) => P + i * ((W - 2*P) / 6);
+  const ys = (v) => v == null ? null : H - P - (v / 10) * (H - 2*P);
+
+  const points = last7.map((p,i) => p.focus != null ? `${xs(i)},${ys(p.focus)}` : null).filter(Boolean);
+  const segs = [];
+  let segCurrent = [];
+  last7.forEach((p,i) => {
+    if (p.focus != null){
+      segCurrent.push(`${xs(i)},${ys(p.focus)}`);
+    } else if (segCurrent.length){
+      segs.push(segCurrent);
+      segCurrent = [];
+    }
+  });
+  if (segCurrent.length) segs.push(segCurrent);
+
+  let html = '';
+  // grid
+  for (let i = 0; i <= 4; i++){
+    const y = P + i * ((H - 2*P)/4);
+    html += `<line x1="${P}" y1="${y}" x2="${W-P}" y2="${y}" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>`;
+  }
+
+  // area
+  if (points.length >= 2){
+    const areaPath = `M ${points[0]} L ${points.join(' L ')} L ${xs(last7.length-1)},${H-P} L ${xs(0)},${H-P} Z`;
+    html += `<path d="${areaPath}" fill="url(#areaGrad)" opacity="0.3"/>`;
+  }
+
+  // line segments
+  segs.forEach(seg => {
+    if (seg.length >= 2){
+      html += `<polyline points="${seg.join(' ')}" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+  });
+
+  // dots
+  last7.forEach((p,i) => {
+    if (p.focus != null){
+      html += `<circle cx="${xs(i)}" cy="${ys(p.focus)}" r="4" fill="#0b0d14" stroke="#7dd3fc" stroke-width="2"/>`;
+    }
+  });
+
+  html += `
+    <defs>
+      <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#7dd3fc"/>
+        <stop offset="100%" stop-color="#c4b5fd"/>
+      </linearGradient>
+      <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#7dd3fc" stop-opacity="0"/>
+      </linearGradient>
+    </defs>`;
+
+  svg.innerHTML = html;
+}
+
+function drawHeatmap(){
+  const wrap = $('#heatmap');
+  const days = 28;
+  const cells = [];
+  for (let i = days - 1; i >= 0; i--){
+    const d = daysAgo(i);
+    const recs = store.records.filter(r => r.date === d);
+    const min = recs.reduce((a,r)=>a+(+r.duration||0), 0);
+    cells.push({ d, min });
+  }
+  const max = Math.max(60, ...cells.map(c=>c.min));
+  wrap.innerHTML = cells.map(c => {
+    const ratio = c.min / max;
+    let bg = 'rgba(255,255,255,0.04)';
+    if (ratio > 0.75) bg = '#7dd3fc';
+    else if (ratio > 0.5) bg = 'rgba(125,211,252,0.75)';
+    else if (ratio > 0.25) bg = 'rgba(125,211,252,0.5)';
+    else if (ratio > 0) bg = 'rgba(125,211,252,0.25)';
+    return `<div class="heat-cell" style="background:${bg};" title="${c.d} · ${c.min}min"></div>`;
+  }).join('');
+}
+
+function planItemHTML(p){
+  const tagMap = { study: ['学习',''], hw: ['作业','hw'], exam: ['考试','exam'], routine: ['作息','routine'] };
+  const [tagText, tagCls] = tagMap[p.type] || ['学习',''];
+  return `
+    <div class="plan-item ${p.done?'done':''}" data-id="${p.id}">
+      <button class="plan-check" data-act="toggle">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0b0d14" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <span class="plan-text">${escapeHtml(p.text)}</span>
+      <div class="plan-meta">
+        <span class="plan-tag ${tagCls}">${tagText}</span>
+        ${p.date ? `<span>${fmtDate(p.date)}</span>` : ''}
+      </div>
+      <button class="plan-del" data-act="del" title="删除">×</button>
+    </div>`;
+}
+
+function bindPlanEvents(container){
+  container.querySelectorAll('.plan-item').forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector('[data-act="toggle"]').addEventListener('click', e => {
+      e.stopPropagation();
+      const p = store.plans.find(p=>p.id==id);
+      if (p) { p.done = !p.done; saveStore(); renderPlanPage(); renderDashboard(); }
+    });
+    const del = el.querySelector('[data-act="del"]');
+    if (del) del.addEventListener('click', e => {
+      e.stopPropagation();
+      store.plans = store.plans.filter(p=>p.id!=id);
+      saveStore();
+      renderPlanPage();
+      renderDashboard();
+      toast('已删除');
+    });
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* === Plan page === */
+function renderPlanPage(){
+  const list = $('#allPlanList');
+  if (store.plans.length === 0){
+    list.innerHTML = '<div class="empty"><div class="empty-icon">◇</div>还没有计划，先添加一个吧</div>';
+  } else {
+    const sorted = [...store.plans].sort((a,b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return (a.date || '').localeCompare(b.date || '');
+    });
+    list.innerHTML = sorted.map(p => planItemHTML(p)).join('');
+    bindPlanEvents(list);
+  }
+  const total = store.plans.length;
+  const done = store.plans.filter(p=>p.done).length;
+  $('#planCounter').textContent = `${done} / ${total} 已完成`;
+
+  // pomodoro count
+  if (store.pomodoroDate !== today()){
+    store.pomodoroCount = 0;
+    store.pomodoroDate = today();
+    saveStore();
+  }
+  $('#pomoCount').textContent = store.pomodoroCount;
+}
+
+$('#addPlanBtn').addEventListener('click', () => {
+  const text = $('#planText').value.trim();
+  if (!text) { toast('计划内容不能为空'); return; }
+  store.plans.push({
+    id: Date.now()+Math.random(),
+    text,
+    type: $('#planType').value,
+    date: $('#planDate').value || today(),
+    done: false
+  });
+  saveStore();
+  $('#planText').value = '';
+  renderPlanPage();
+  renderDashboard();
+  toast('计划已添加');
+});
+
+/* === Pomodoro === */
+let pomoState = { running: false, sec: 25*60, mode: 'focus', timer: null };
+
+function pomoUpdate(){
+  const m = String(Math.floor(pomoState.sec/60)).padStart(2,'0');
+  const s = String(pomoState.sec%60).padStart(2,'0');
+  $('#pomoTime').textContent = `${m}:${s}`;
+  $('#pomoMode').textContent = pomoState.mode === 'focus' ? 'FOCUS' : 'BREAK';
+  const total = pomoState.mode === 'focus' ? 25*60 : 5*60;
+  const ratio = pomoState.sec / total;
+  $('#pomoRing').style.strokeDashoffset = 660 * (1 - ratio);
+  $('#pomoStatus').textContent = pomoState.running ? '专注中' : '待机';
+}
+
+$('#pomoStart').addEventListener('click', () => {
+  if (pomoState.running){
+    pomoState.running = false;
+    clearInterval(pomoState.timer);
+    $('#pomoStart').innerHTML = '▶ 继续';
+  } else {
+    pomoState.running = true;
+    $('#pomoStart').innerHTML = '⏸ 暂停';
+    pomoState.timer = setInterval(() => {
+      pomoState.sec--;
+      if (pomoState.sec <= 0){
+        clearInterval(pomoState.timer);
+        if (pomoState.mode === 'focus'){
+          store.pomodoroCount++;
+          store.pomodoroDate = today();
+          saveStore();
+          pomoState.mode = 'break';
+          pomoState.sec = 5*60;
+          toast('🍅 专注完成！休息一下');
+          $('#pomoCount').textContent = store.pomodoroCount;
+        } else {
+          pomoState.mode = 'focus';
+          pomoState.sec = 25*60;
+          toast('☕ 休息结束，继续加油');
+        }
+        pomoState.running = false;
+        $('#pomoStart').innerHTML = '▶ 开始';
+      }
+      pomoUpdate();
+    }, 1000);
+  }
+  pomoUpdate();
+});
+
+$('#pomoReset').addEventListener('click', () => {
+  clearInterval(pomoState.timer);
+  pomoState = { running: false, sec: pomoState.mode === 'focus' ? 25*60 : 5*60, mode: pomoState.mode, timer: null };
+  $('#pomoStart').innerHTML = '▶ 开始';
+  pomoUpdate();
+});
+
+/* === Record page === */
+function renderRecordPage(){
+  if (!$('#recDate').value) $('#recDate').value = today();
+  if (!$('#planDate').value) $('#planDate').value = today();
+  // Log table
+  const tbody = $('#logTableBody');
+  if (store.records.length === 0){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-3);">暂无记录</td></tr>';
+  } else {
+    const moodEmoji = ['','😔','😐','🙂','😊','🤩'];
+    const sorted = [...store.records].sort((a,b)=>b.date.localeCompare(a.date));
+    tbody.innerHTML = sorted.slice(0, 30).map(r => {
+      const sCls = r.score ? (r.score >= 85 ? 'high' : r.score < 60 ? 'low' : '') : '';
+      return `<tr>
+        <td>${r.date}</td>
+        <td>${r.subject}</td>
+        <td>${r.duration} 分</td>
+        <td>${r.score ? `<span class="score-badge ${sCls}">${r.score}</span>` : '—'}</td>
+        <td>${r.focus} / 10</td>
+        <td>${r.sleep || '—'} h</td>
+        <td>${moodEmoji[r.mood] || '🙂'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // err list
+  const errList = $('#errList');
+  if (store.errors.length === 0){
+    errList.innerHTML = '<div class="empty" style="padding:20px;"><div class="empty-icon">○</div>暂无错题记录</div>';
+  } else {
+    const typeMap = { careless:'粗心', concept:'概念不清', method:'方法错误', time:'时间不够' };
+    const periodMap = { morning:'上午', afternoon:'下午', evening:'晚上', late:'深夜' };
+    errList.innerHTML = [...store.errors].slice(-10).reverse().map(e => `
+      <div class="plan-item" style="padding:10px 12px;">
+        <span class="plan-text" style="font-size:13px;">${escapeHtml(e.subject)} · ${escapeHtml(e.topic)}</span>
+        <div class="plan-meta">
+          <span class="plan-tag exam">${typeMap[e.type]||e.type}</span>
+          <span>${periodMap[e.period]||e.period}</span>
+        </div>
+      </div>`).join('');
+  }
+}
+
+$('#recFocus').addEventListener('input', e => $('#focusVal').textContent = e.target.value);
+
+$$('#moodPicker .mood-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    $$('#moodPicker .mood-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  });
+});
+
+$('#addRecBtn').addEventListener('click', () => {
+  const dur = +$('#recDuration').value;
+  if (!dur || dur <= 0) { toast('请填写学习时长'); return; }
+  const moodSel = $('#moodPicker .selected');
+  store.records.push({
+    id: Date.now()+Math.random(),
+    date: $('#recDate').value || today(),
+    subject: $('#recSubject').value,
+    duration: dur,
+    score: +$('#recScore').value || null,
+    focus: +$('#recFocus').value,
+    sleep: +$('#recSleep').value || null,
+    mood: moodSel ? +moodSel.dataset.mood : 3,
+    note: $('#recNote').value
+  });
+  saveStore();
+  $('#recDuration').value = '';
+  $('#recScore').value = '';
+  $('#recSleep').value = '';
+  $('#recNote').value = '';
+  renderRecordPage();
+  toast('✓ 数据已保存，AI 已更新分析');
+});
+
+$('#addErrBtn').addEventListener('click', () => {
+  const topic = $('#errTopic').value.trim();
+  if (!topic) { toast('请填写知识点'); return; }
+  store.errors.push({
+    id: Date.now()+Math.random(),
+    date: today(),
+    subject: $('#errSubject').value,
+    topic,
+    type: $('#errType').value,
+    period: $('#errPeriod').value
+  });
+  saveStore();
+  $('#errTopic').value = '';
+  renderRecordPage();
+  toast('✓ 错题已记录');
+});
+
+$('#clearAllBtn').addEventListener('click', () => {
+  if (confirm('确定要清除所有数据吗？此操作不可恢复。')){
+    localStorage.removeItem(STORE_KEY);
+    store = JSON.parse(JSON.stringify(defaultStore));
+    renderRecordPage();
+    renderDashboard();
+    toast('所有数据已清除');
+  }
+});
+
+/* === Analysis Page === */
+function renderAnalysis(){
+  const a = aiAnalyze();
+  $('#aiHeadline').innerHTML = a.headline;
+  $('#aiBody').textContent = a.summary;
+
+  const metrics = [
+    { key:'efficiency', label:'学习效率', val:a.metrics.efficiency },
+    { key:'focus', label:'专注力', val:a.metrics.focus },
+    { key:'health', label:'作息健康', val:a.metrics.health },
+    { key:'stress', label:'压力指数', val:a.metrics.stress, invert:true },
+    { key:'procrastination', label:'拖延风险', val:a.metrics.procrastination, invert:true },
+    { key:'bias', label:'偏科指数', val:a.metrics.bias, invert:true }
+  ];
+
+  $('#metricGrid').innerHTML = metrics.map(m => `
+    <div class="metric-cell">
+      <div class="m-label">${m.label}</div>
+      <div class="m-val">${m.val}<span style="font-size:14px;color:var(--text-3);font-family:'Noto Sans SC',sans-serif;">/100</span></div>
+      <div class="m-bar"><div class="m-bar-fill" style="width:${m.val}%;background:${m.invert ? (m.val>60?'var(--grad-3)':'var(--grad-1)') : (m.val>60?'var(--grad-2)':'var(--grad-1)')};"></div></div>
+    </div>`).join('');
+
+  const sList = $('#suggestionList');
+  if (a.suggestions.length){
+    sList.innerHTML = a.suggestions.map(s => `
+      <div class="suggestion">
+        <div class="suggestion-icon ${s.type}">${s.icon}</div>
+        <div class="suggestion-body">
+          <div class="suggestion-title">${s.title}</div>
+          <div class="suggestion-desc">${s.desc}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+$('#refreshAnalysis').addEventListener('click', () => {
+  renderAnalysis();
+  toast('✓ AI 已重新分析');
+});
+
+$('#newQuoteBtn').addEventListener('click', () => {
+  const q = ENCOURAGES[Math.floor(Math.random()*ENCOURAGES.length)];
+  $('#encourageText').textContent = `"${q}"`;
+});
+
+/* === DNA Page === */
+function renderDNA(){
+  const errs = store.errors;
+  const radar = $('#dnaRadar');
+  const stats = $('#dnaStats');
+
+  if (errs.length === 0){
+    stats.innerHTML = '<div class="empty"><div class="empty-icon">○</div>请在"记录"页添加错题数据</div>';
+    drawRadar([], { 粗心率:0, 概念不清:0, 方法错误:0, 时间不够:0, 上午错误:0, 晚上错误:0 });
+    $('#topicList').innerHTML = '<div class="empty"><div class="empty-icon">◇</div>暂无数据</div>';
+    $('#periodList').innerHTML = '<div class="empty"><div class="empty-icon">◇</div>暂无数据</div>';
+    return;
+  }
+
+  const total = errs.length;
+
+  // type
+  const typeCount = { careless:0, concept:0, method:0, time:0 };
+  errs.forEach(e => typeCount[e.type] = (typeCount[e.type]||0) + 1);
+
+  const typeMap = { careless:'粗心率', concept:'概念不清', method:'方法错误', time:'时间不够' };
+
+  // period
+  const periodCount = { morning:0, afternoon:0, evening:0, late:0 };
+  errs.forEach(e => periodCount[e.period] = (periodCount[e.period]||0) + 1);
+
+  // subject
+  const subjCount = {};
+  errs.forEach(e => subjCount[e.subject] = (subjCount[e.subject]||0) + 1);
+
+  // topic
+  const topicCount = {};
+  errs.forEach(e => {
+    const k = `${e.subject} · ${e.topic}`;
+    topicCount[k] = (topicCount[k]||0) + 1;
+  });
+
+  // radar
+  const radarData = {
+    '粗心': Math.round(typeCount.careless/total*100),
+    '概念': Math.round(typeCount.concept/total*100),
+    '方法': Math.round(typeCount.method/total*100),
+    '时间': Math.round(typeCount.time/total*100),
+    '上午': Math.round(periodCount.morning/total*100),
+    '深夜': Math.round(periodCount.late/total*100)
+  };
+  drawRadar(Object.keys(radarData), radarData);
+
+  // stats bars
+  const statsRows = [
+    ['粗心率', typeCount.careless, total],
+    ['概念不清', typeCount.concept, total],
+    ['方法错误', typeCount.method, total],
+    ['时间不够', typeCount.time, total]
+  ];
+  stats.innerHTML = statsRows.map(([label, val, total]) => {
+    const pct = Math.round(val/total*100);
+    return `
+      <div class="dna-bar-row">
+        <span class="dna-bar-label">${label}</span>
+        <div class="dna-bar"><div class="dna-bar-fill" style="width:${pct}%"></div></div>
+        <span class="dna-bar-val">${pct}%</span>
+      </div>`;
+  }).join('');
+
+  // topic list
+  const topTopics = Object.entries(topicCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxT = topTopics[0]?.[1] || 1;
+  $('#topicList').innerHTML = `<div class="subject-list">${topTopics.map(([k,v]) => `
+    <div class="subject-row">
+      <span class="subject-name" style="font-size:12px;">${escapeHtml(k.split('·')[0])}</span>
+      <div class="subject-bar"><div class="subject-bar-fill" style="width:${v/maxT*100}%;background:var(--grad-3);"></div></div>
+      <span class="subject-value">×${v}</span>
+    </div>`).join('')}</div>`;
+
+  // period list
+  const pMap = { morning:'上午 (6-12)', afternoon:'下午 (12-18)', evening:'晚上 (18-22)', late:'深夜 (22+)' };
+  const maxP = Math.max(...Object.values(periodCount));
+  $('#periodList').innerHTML = `<div class="subject-list">${Object.entries(pMap).map(([k,v]) => `
+    <div class="subject-row">
+      <span class="subject-name" style="font-size:12px;">${v}</span>
+      <div class="subject-bar"><div class="subject-bar-fill" style="width:${maxP?periodCount[k]/maxP*100:0}%;background:var(--grad-3);"></div></div>
+      <span class="subject-value">×${periodCount[k]||0}</span>
+    </div>`).join('')}</div>`;
+}
+
+function drawRadar(labels, data){
+  const svg = $('#dnaRadar');
+  const cx = 160, cy = 160, r = 110;
+  const keys = Object.keys(data);
+  const n = keys.length || 6;
+
+  let html = '';
+  // grid
+  for (let lvl = 1; lvl <= 4; lvl++){
+    const rr = r * lvl / 4;
+    const pts = [];
+    for (let i = 0; i < n; i++){
+      const angle = -Math.PI/2 + i * (Math.PI*2/n);
+      const x = cx + Math.cos(angle)*rr;
+      const y = cy + Math.sin(angle)*rr;
+      pts.push(`${x},${y}`);
+    }
+    html += `<polygon points="${pts.join(' ')}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+  }
+
+  // axes
+  for (let i = 0; i < n; i++){
+    const angle = -Math.PI/2 + i * (Math.PI*2/n);
+    const x = cx + Math.cos(angle)*r;
+    const y = cy + Math.sin(angle)*r;
+    html += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+  }
+
+  // data
+  const pts = [];
+  for (let i = 0; i < n; i++){
+    const angle = -Math.PI/2 + i * (Math.PI*2/n);
+    const v = data[keys[i]] / 100;
+    const x = cx + Math.cos(angle)*r*v;
+    const y = cy + Math.sin(angle)*r*v;
+    pts.push(`${x},${y}`);
+  }
+  html += `<polygon points="${pts.join(' ')}" fill="url(#radarFill)" stroke="#7dd3fc" stroke-width="2" opacity="0.85"/>`;
+  pts.forEach(p => {
+    const [x,y] = p.split(',');
+    html += `<circle cx="${x}" cy="${y}" r="4" fill="#0b0d14" stroke="#7dd3fc" stroke-width="2"/>`;
+  });
+
+  // labels
+  for (let i = 0; i < n; i++){
+    const angle = -Math.PI/2 + i * (Math.PI*2/n);
+    const x = cx + Math.cos(angle)*(r+22);
+    const y = cy + Math.sin(angle)*(r+22) + 4;
+    html += `<text x="${x}" y="${y}" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-size="11" font-family="JetBrains Mono">${keys[i]}</text>`;
+    const v = data[keys[i]];
+    html += `<text x="${x}" y="${y+12}" text-anchor="middle" fill="#7dd3fc" font-size="9" font-family="JetBrains Mono">${v}%</text>`;
+  }
+
+  html += `
+    <defs>
+      <radialGradient id="radarFill" cx="50%" cy="50%">
+        <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#c4b5fd" stop-opacity="0.15"/>
+      </radialGradient>
+    </defs>`;
+
+  svg.innerHTML = html;
+}
+
+/* === Prediction === */
+function renderPrediction(){
+  const a = aiAnalyze();
+  const subjects = a.subjects;
+  const subjList = Object.keys(subjects).filter(s => subjects[s].scores.length > 0);
+
+  if (subjList.length === 0){
+    $('#predHeadline').innerHTML = '需要<em>成绩数据</em>启动预测';
+    $('#predBody').textContent = '在"记录"页录入至少 1 条带成绩的学习数据，AI 会立刻为你模拟未来 30 天的提升路径。';
+    $('#predChart').innerHTML = '';
+    $('#predSummary').innerHTML = '';
+    return;
+  }
+
+  const efficiency = a.metrics.efficiency / 100; // 0-1
+  const focus = a.metrics.focus / 100;
+  const health = a.metrics.health / 100;
+  // 增长系数：高效率高专注高健康 → 显著提升
+  const baseGrowth = (efficiency * 0.4 + focus * 0.3 + health * 0.3);
+
+  $('#predHeadline').innerHTML = baseGrowth > 0.65
+    ? '按当前节奏，<em>稳步上升</em>'
+    : baseGrowth > 0.4
+      ? '保持节奏，<em>缓慢提升</em>'
+      : '当前节奏下，<em>提升有限</em>';
+
+  $('#predBody').textContent = `基于你的学习效率 (${a.metrics.efficiency})、专注力 (${a.metrics.focus}) 和作息健康 (${a.metrics.health})，模型预测未来 30 天各科成绩的可能走势：`;
+
+  // chart
+  const W = 800, H = 280, P = 30;
+  const days = 30;
+  const colors = ['#7dd3fc','#c4b5fd','#fbbf24','#4ade80','#fb7185','#f9a8d4','#a78bfa','#34d399'];
+  let html = '';
+
+  // grid
+  for (let i = 0; i <= 5; i++){
+    const y = P + i * ((H - 2*P)/5);
+    html += `<line x1="${P}" y1="${y}" x2="${W-P}" y2="${y}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`;
+    const score = 100 - i*20;
+    html += `<text x="${P-8}" y="${y+3}" text-anchor="end" fill="rgba(255,255,255,0.3)" font-size="9" font-family="JetBrains Mono">${score}</text>`;
+  }
+
+  const subjectPredictions = [];
+
+  subjList.forEach((s, idx) => {
+    const scores = subjects[s].scores;
+    const cur = scores[scores.length - 1];
+    // theoretical max growth
+    const headroom = 100 - cur;
+    const maxGain = headroom * baseGrowth * 0.4; // 40% of headroom max
+    const variance = (Math.random()-0.5) * 4;
+    const future = Math.min(100, Math.max(0, Math.round(cur + maxGain + variance)));
+
+    subjectPredictions.push({ subject: s, current: cur, future, color: colors[idx % colors.length] });
+
+    // smooth curve
+    const pts = [];
+    for (let d = 0; d <= days; d++){
+      const t = d / days;
+      // ease-in-out with noise
+      const easeT = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+      const noise = Math.sin(d * 0.7 + idx) * 1.2;
+      const v = cur + (future - cur) * easeT + noise;
+      const x = P + (d/days) * (W - 2*P);
+      const y = H - P - (v/100) * (H - 2*P);
+      pts.push(`${x},${y}`);
+    }
+    html += `<polyline points="${pts.join(' ')}" fill="none" stroke="${colors[idx % colors.length]}" stroke-width="2.5" stroke-linecap="round" opacity="0.9">
+      <animate attributeName="stroke-dasharray" from="0,9999" to="9999,0" dur="2s" fill="freeze"/>
+    </polyline>`;
+    // start dot
+    const sx = P, sy = H - P - (cur/100) * (H - 2*P);
+    html += `<circle cx="${sx}" cy="${sy}" r="4" fill="#0b0d14" stroke="${colors[idx % colors.length]}" stroke-width="2"/>`;
+    // end dot
+    const ex = W - P, ey = H - P - (future/100) * (H - 2*P);
+    html += `<circle cx="${ex}" cy="${ey}" r="5" fill="${colors[idx % colors.length]}" stroke="#0b0d14" stroke-width="2"/>`;
+    // label
+    html += `<text x="${ex+8}" y="${ey+3}" fill="${colors[idx % colors.length]}" font-size="11" font-weight="600" font-family="JetBrains Mono">${s}</text>`;
+  });
+
+  $('#predChart').innerHTML = html;
+
+  // summary cells
+  $('#predSummary').innerHTML = subjectPredictions.map(p => {
+    const delta = p.future - p.current;
+    return `
+      <div class="pred-cell">
+        <div class="p-subject" style="color:${p.color};">${p.subject}</div>
+        <div class="p-numbers">
+          <span class="p-current">${p.current}</span>
+          <span style="color:var(--text-3);">→</span>
+          <span class="p-future">${p.future}</span>
+        </div>
+        <div class="p-delta ${delta>=0?'up':'down'}">${delta>=0?'↗':'↘'} ${delta>=0?'+':''}${delta} 分 · 30 天</div>
+      </div>`;
+  }).join('');
+}
+
+/* === Animate number === */
+function animateNumber(sel, from, to, dur){
+  const el = $(sel);
+  if (!el) return;
+  const start = performance.now();
+  function tick(now){
+    const t = Math.min(1, (now - start)/dur);
+    const eased = 1 - Math.pow(1-t, 3);
+    el.textContent = Math.round(from + (to-from)*eased);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* === Init === */
+function init(){
+  updateDateChip();
+  $('#encourageText').textContent = `"${ENCOURAGES[Math.floor(Math.random()*ENCOURAGES.length)]}"`;
+  $('#sidebarStatus').textContent = `READY · ${store.records.length}R / ${store.plans.length}P`;
+  pomoUpdate();
+  renderDashboard();
+
+  /* 安全读取 currentUser（var 全局变量，auth 脚本已声明）*/
+  var cu = (typeof currentUser !== 'undefined') ? currentUser : null;
+  if (cu && cu.username) {
+    var avatarEmoji = cu.gender === 'female' ? '👧' : '👦';
+    var dashTitle = document.querySelector('#page-dashboard .page-title');
+    if (dashTitle) dashTitle.innerHTML = `你好，<em>${escapeHtml(cu.username)}</em>`;
+    var greetEl = document.querySelector('.companion-greet');
+    if (greetEl) greetEl.innerHTML = `你好，<em>${escapeHtml(cu.username)}</em> ${avatarEmoji}`;
+  }
+
+  if (store.records.length === 0 && store.plans.length === 0){
+    setTimeout(() => toast('提示：先在"记录"页填写学习数据'), 800);
+  }
+}
+
+/* 首次加载时执行基础初始化（不依赖登录状态）
+   登录成功后 enterApp() 会再次调用 init() 更新用户信息 */
+try { init(); } catch(e) { console.warn('[Nexus] init 初始化警告:', e.message); }
+
+/* ════════════════════════════════════════════════════
+   ✦ 番茄钟氛围控制 — 运行时激活呼吸灯 + 流光
+   ════════════════════════════════════════════════════ */
+function updatePomoAtmosphere() {
+  var wrap  = document.getElementById('pomoRingWrap');
+  var card  = document.getElementById('pomoCard');
+  if (!wrap || !card) return;
+
+  var running = pomoState.running;
+  var mode    = pomoState.mode; // 'focus' | 'break'
+
+  /* 清除所有状态类 */
+  wrap.classList.remove('pomo-active', 'pomo-break');
+  card.classList.remove('pomo-card-active', 'pomo-card-break');
+
+  if (!running) return;
+
+  if (mode === 'focus') {
+    wrap.classList.add('pomo-active');
+    card.classList.add('pomo-card-active');
+  } else {
+    wrap.classList.add('pomo-break');
+    card.classList.add('pomo-card-break');
+  }
+}
+
+/* 钩入现有 pomoStart 按钮（追加监听，不替换）*/
+(function hookPomoAtmosphere() {
+  var btn = document.getElementById('pomoStart');
+  var rst = document.getElementById('pomoReset');
+  if (btn) btn.addEventListener('click', function() {
+    setTimeout(updatePomoAtmosphere, 50);
+  });
+  if (rst) rst.addEventListener('click', function() {
+    setTimeout(updatePomoAtmosphere, 50);
+  });
+})();
+
+/* ════════════════════════════════════════════════════
+   ✦ 深夜守护模式
+   ════════════════════════════════════════════════════ */
+
+/* 星空绘制 — 轻量 canvas，固定数量小白点 */
+function drawNightStars() {
+  var canvas = document.getElementById('nightStars');
+  if (!canvas) return;
+  var W = canvas.width  = window.innerWidth;
+  var H = canvas.height = window.innerHeight;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  var count = Math.min(120, Math.floor(W * H / 8000));
+  for (var i = 0; i < count; i++) {
+    var x   = Math.random() * W;
+    var y   = Math.random() * H;
+    var r   = 0.3 + Math.random() * 1.0;
+    var opc = 0.2 + Math.random() * 0.55;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,' +
+      Math.floor(235 + Math.random() * 20) + ',' +
+      Math.floor(200 + Math.random() * 40) + ',' + opc + ')';
+    ctx.fill();
+  }
+}
+
+/* 星星闪烁：每 3s 重绘一次（仅深夜模式时运行，极低性能消耗）*/
+var _starTimer = null;
+function startStarTwinkle() {
+  drawNightStars();
+  _starTimer = setInterval(function() {
+    if (document.body.classList.contains('night-mode')) {
+      drawNightStars();
+    }
+  }, 3200);
+}
+function stopStarTwinkle() {
+  clearInterval(_starTimer);
+  _starTimer = null;
+}
+
+/* 深夜消息池 */
+var nightMessages = [
+  { title: '已经很晚了，今天辛苦了',       sub: '记得好好休息，明天的你会感谢现在的你 🌙' },
+  { title: '深夜了，今天做得很棒',          sub: '学习是场马拉松，睡眠也是实力的一部分 ✨'  },
+  { title: '夜深了，注意保护眼睛',          sub: '屏幕亮度调低一点，给眼睛多一点爱护 💛'    },
+  { title: '又是认真的深夜学习',            sub: '今天能完成多少就多少，不用强迫自己 🌿'    },
+  { title: '深夜还在奋斗的你，真的很棒',    sub: '但记住：休息好了，效率才会更高 🌸'       },
+];
+
+/* 检测是否深夜（23:00–05:59）*/
+function checkNightMode() {
+  var h   = new Date().getHours();
+  var isN = h >= 23 || h < 6;
+  var was = document.body.classList.contains('night-mode');
+
+  if (isN && !was) {
+    /* 进入深夜模式 */
+    document.body.classList.add('night-mode');
+    startStarTwinkle();
+
+    /* 随机消息 */
+    var msg = nightMessages[Math.floor(Math.random() * nightMessages.length)];
+    var t   = document.getElementById('nightBarTitle');
+    var s   = document.getElementById('nightBarSub');
+    var bar = document.getElementById('nightBar');
+    if (t)   t.textContent = msg.title;
+    if (s)   s.textContent = msg.sub;
+    if (bar) bar.style.display = '';  /* 确保可见 */
+
+  } else if (!isN && was) {
+    /* 离开深夜模式 */
+    document.body.classList.remove('night-mode');
+    stopStarTwinkle();
+    var cv = document.getElementById('nightStars');
+    if (cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  }
+}
+
+/* 首次检测 + 每分钟轮询 */
+checkNightMode();
+setInterval(checkNightMode, 60000);
+
+/* canvas resize */
+window.addEventListener('resize', function() {
+  if (document.body.classList.contains('night-mode')) drawNightStars();
+});
+
+// keyboard shortcut
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
