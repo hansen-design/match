@@ -2217,8 +2217,8 @@ body.dev-mode-on .menu-toggle { top: 50px; }
     <!-- LOGIN FORM -->
     <div id="loginForm" class="auth-form">
       <div class="auth-field">
-        <label class="auth-label">用户名</label>
-        <input class="auth-input" id="loginUsername" type="text" placeholder="请输入用户名" autocomplete="username">
+        <label class="auth-label">邮箱地址</label>
+        <input class="auth-input" id="loginUsername" type="email" placeholder="请输入邮箱地址" autocomplete="email">
       </div>
       <div class="auth-field">
         <label class="auth-label">密码</label>
@@ -3083,21 +3083,23 @@ async function doLogin() {
   /* DEV_MODE：跳过表单，直接进入 */
   if (DEV_MODE) { enterApp(DEV_USER.username, DEV_USER.gender); return; }
 
-  var username = (document.getElementById('loginUsername').value || '').trim();
+  var email    = (document.getElementById('loginUsername').value || '').trim();
   var password = document.getElementById('loginPassword').value || '';
   authErrHide('loginErr');
-  if (!username) { authErrShow('loginErr', '请输入用户名'); return; }
+  if (!email)    { authErrShow('loginErr', '请输入邮箱地址'); return; }
   if (!password) { authErrShow('loginErr', '请输入密码'); return; }
   authBtnLoading('loginBtn', true, '登录');
   try {
     var result = _sbOnline && _sbClient
-      ? await _sbClient.auth.signInWithPassword({ email: toEmail(username), password: password })
-      : localLogin(username, password);
+      ? await _sbClient.auth.signInWithPassword({ email: email, password: password })
+      : localLogin(email, password);
     authBtnLoading('loginBtn', false, '登录');
     if (result.error) { authErrShow('loginErr', translateAuthError(result.error.message)); return; }
-    var gender = (result.data && result.data.user && result.data.user.user_metadata && result.data.user.user_metadata.gender) || 'male';
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ username: username, gender: gender }));
-    enterApp(username, gender);
+    var meta     = result.data && result.data.user && result.data.user.user_metadata;
+    var gender   = (meta && meta.gender)   || 'male';
+    var dispName = (meta && meta.username) || email.split('@')[0];
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ username: dispName, gender: gender }));
+    enterApp(dispName, gender);
   } catch(e) {
     authBtnLoading('loginBtn', false, '登录');
     authErrShow('loginErr', translateAuthError(e.message || String(e)));
@@ -3213,7 +3215,8 @@ async function bootAuth() {
       var session    = sessionRes.data && sessionRes.data.session;
       if (session && session.user) {
         var cached   = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || '{}');
-        var uname    = cached.username || session.user.email.replace('@nexus.app', '');
+        var meta2    = session.user.user_metadata || {};
+        var uname    = cached.username || meta2.username || session.user.email.split('@')[0];
         var gdr      = cached.gender   || (session.user.user_metadata && session.user.user_metadata.gender) || 'male';
         enterApp(uname, gdr);
         restored = true;
